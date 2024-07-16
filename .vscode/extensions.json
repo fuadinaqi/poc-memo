@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "nrwl.angular-console",
+    "esbenp.prettier-vscode",
+    "firsttris.vscode-jest-runner",
+    "dbaeumer.vscode-eslint",
+    "csstools.postcss",
+    "bradlc.vscode-tailwindcss",
+    "lightyen.tailwindcss-intellisense-twin"
+  ]
+}
