@@ -1,113 +1,229 @@
-import Image from "next/image";
+'use client';
+import Image from 'next/image';
+import { useCallback, useMemo, useState } from 'react';
+// Import the Slate editor factory.
+import { createEditor, Editor, Element, Transforms } from 'slate';
+// TypeScript users only add this code
+import { BaseEditor, Descendant, Node } from 'slate';
+import { ReactEditor } from 'slate-react';
+
+type CustomElement = { type: 'paragraph'; children: CustomText[] };
+type CustomText = { text: string };
+
+declare module 'slate' {
+  interface CustomTypes {
+    Editor: BaseEditor & ReactEditor;
+    Element: CustomElement;
+    Text: CustomText;
+  }
+}
+// Import the Slate components and React plugin.
+import { Slate, Editable, withReact } from 'slate-react';
+
+// Define a React component renderer for our code blocks.
+const CodeElement = (props: any) => {
+  return (
+    <pre {...props.attributes}>
+      <code>{props.children}</code>
+    </pre>
+  );
+};
+
+const DefaultElement = (props: any) => {
+  console.log(props);
+  return <p {...props.attributes}>{props.children}</p>;
+};
+
+// Define a React component to render leaves with bold text.
+const Leaf = (props: any) => {
+  return (
+    <span
+      {...props.attributes}
+      style={{
+        fontWeight: props.leaf.bold ? 'bold' : 'normal',
+        fontStyle: props.leaf.italic ? 'italic' : 'normal',
+      }}
+    >
+      {props.children}
+    </span>
+  );
+};
+
+// Define our own custom set of helpers.
+const CustomEditor = {
+  isBoldMarkActive(editor) {
+    const marks = Editor.marks(editor);
+    return marks ? marks.bold === true : false;
+  },
+
+  isItalicMarkActive(editor) {
+    const marks = Editor.marks(editor);
+    return marks ? marks.italic === true : false;
+  },
+
+  isCodeBlockActive(editor) {
+    const [match] = Editor.nodes(editor, {
+      match: (n) => n.type === 'code',
+    });
+
+    return !!match;
+  },
+
+  toggleBoldMark(editor) {
+    const isActive = CustomEditor.isBoldMarkActive(editor);
+    if (isActive) {
+      Editor.removeMark(editor, 'bold');
+    } else {
+      Editor.addMark(editor, 'bold', true);
+    }
+  },
+
+  toggleItalicMark(editor) {
+    const isActive = CustomEditor.isItalicMarkActive(editor);
+    if (isActive) {
+      Editor.removeMark(editor, 'italic');
+    } else {
+      Editor.addMark(editor, 'italic', true);
+    }
+  },
+
+  // toggleCodeBlock(editor) {
+  //   const isActive = CustomEditor.isCodeBlockActive(editor)
+  //   Transforms.setNodes(
+  //     editor,
+  //     { type: isActive ? null : 'code' },
+  //     { match: n => Editor.isBlock(editor, n) }
+  //   )
+  // },
+};
 
 export default function Home() {
+  const [editor] = useState(() => withReact(createEditor()));
+  // editor.isInline = (element) => {
+  //   return element.type === 'paragraph'
+  // }
+
+  const renderElement = useCallback((props: any) => {
+    switch (props.element.type) {
+      case 'code':
+        return <CodeElement {...props} />;
+      default:
+        return <DefaultElement {...props} />;
+    }
+  }, []);
+
+  const renderLeaf = useCallback((props: any) => {
+    return <Leaf {...props} />;
+  }, []);
+
+  const initialValue = useMemo(() => {
+    if (localStorage.getItem('content')) {
+      return (
+        JSON.parse(localStorage.getItem('content') || '') || [
+          {
+            type: 'paragraph',
+            children: [{ text: 'A line of text in a paragraph.' }],
+          },
+        ]
+      );
+    }
+    return [
+      {
+        type: 'paragraph',
+        children: [{ text: 'A line of text in a paragraph.' }],
+      },
+    ];
+  }, []);
+  const [isEdit, setIsEdit] = useState<boolean>(false);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <div className="flex justify-center mt-40">
+      {isEdit ? (
+        <Slate
+          onChange={(value) => {
+            const isAstChange = editor.operations.some(
+              (op) => 'set_selection' !== op.type
+            );
+            if (isAstChange) {
+              // console.log(value.map((node: any) => {
+              //   return Node.string(node)
+              // }).join('\n'))
+              // Save the value to Local Storage.
+              const content = JSON.stringify(value);
+              localStorage.setItem('content', content);
+            }
+          }}
+          editor={editor}
+          initialValue={initialValue}
+        >
+          <div>
+            <button
+              onMouseDown={(event) => {
+                event.preventDefault();
+                CustomEditor.toggleBoldMark(editor);
+              }}
+            >
+              Bold
+            </button>{' '}
+            <button
+              onMouseDown={(event) => {
+                event.preventDefault();
+                CustomEditor.toggleItalicMark(editor);
+              }}
+            >
+              Italic
+            </button>
+          </div>
+          <Editable
+            className={`min-w-[400px] max-w-[400px] border`}
+            onMouseEnter={() => {
+              console.log('onMouseEnter');
+            }}
+            onMouseLeave={() => {
+              console.log('onMouseLeave');
+            }}
+            autoFocus
+            // readOnly
+            renderElement={renderElement}
+            renderLeaf={renderLeaf}
+            onKeyDown={(event) => {
+              if (!event.ctrlKey && !event.metaKey) {
+                return;
+              }
+
+              // Replace the `onKeyDown` logic with our new commands.
+              switch (event.key) {
+                // case '`': {
+                //   event.preventDefault()
+                //   CustomEditor.toggleCodeBlock(editor)
+                //   break
+                // }
+
+                case 'b': {
+                  event.preventDefault();
+                  CustomEditor.toggleBoldMark(editor);
+                  break;
+                }
+
+                case 'i': {
+                  event.preventDefault();
+                  CustomEditor.toggleItalicMark(editor);
+                  break;
+                }
+              }
+            }}
+          />
+        </Slate>
+      ) : (
+        <div
+          className={`border border-transparent hover:border-blue-200`}
+          onClick={() => {
+            setIsEdit(true);
+          }}
+        >
+          An example text
         </div>
-      </div>
-
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+      )}
+    </div>
   );
 }
