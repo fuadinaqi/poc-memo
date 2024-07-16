@@ -1,14 +1,25 @@
 'use client';
-import Image from 'next/image';
-import { useCallback, useMemo, useState } from 'react';
-// Import the Slate editor factory.
-import { createEditor, Editor, Element, Transforms } from 'slate';
-// TypeScript users only add this code
-import { BaseEditor, Descendant, Node } from 'slate';
-import { ReactEditor } from 'slate-react';
 
-type CustomElement = { type: 'paragraph'; children: CustomText[] };
-type CustomText = { text: string };
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { createEditor, Transforms } from 'slate';
+import { BaseEditor, Descendant, Node } from 'slate';
+import {
+  ReactEditor,
+  Slate,
+  Editable,
+  withReact,
+  RenderElementProps,
+  RenderLeafProps,
+} from 'slate-react';
+import Toolbar, { CustomEditor } from './_components/toolbar';
+
+type CustomElement = { type: 'paragraph' | 'title'; children: CustomText[] };
+type CustomText = {
+  text: string;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+};
 
 declare module 'slate' {
   interface CustomTypes {
@@ -17,213 +28,336 @@ declare module 'slate' {
     Text: CustomText;
   }
 }
-// Import the Slate components and React plugin.
-import { Slate, Editable, withReact } from 'slate-react';
 
-// Define a React component renderer for our code blocks.
-const CodeElement = (props: any) => {
+const TitleElement = (props: RenderElementProps) => {
   return (
-    <pre {...props.attributes}>
-      <code>{props.children}</code>
-    </pre>
+    <h1 {...props.attributes} className="font-bold text-center">
+      {props.children}
+    </h1>
   );
 };
 
-const DefaultElement = (props: any) => {
-  console.log(props);
+const DefaultElement = (props: RenderElementProps) => {
   return <p {...props.attributes}>{props.children}</p>;
 };
 
-// Define a React component to render leaves with bold text.
-const Leaf = (props: any) => {
+const Leaf = (props: RenderLeafProps) => {
   return (
     <span
       {...props.attributes}
-      style={{
-        fontWeight: props.leaf.bold ? 'bold' : 'normal',
-        fontStyle: props.leaf.italic ? 'italic' : 'normal',
-      }}
+      className={`
+        ${props.leaf.bold ? 'font-bold' : ''}
+        ${props.leaf.italic ? 'italic' : ''}
+        ${props.leaf.underline ? 'underline' : ''}
+      `}
     >
       {props.children}
     </span>
   );
 };
 
-// Define our own custom set of helpers.
-const CustomEditor = {
-  isBoldMarkActive(editor) {
-    const marks = Editor.marks(editor);
-    return marks ? marks.bold === true : false;
-  },
-
-  isItalicMarkActive(editor) {
-    const marks = Editor.marks(editor);
-    return marks ? marks.italic === true : false;
-  },
-
-  isCodeBlockActive(editor) {
-    const [match] = Editor.nodes(editor, {
-      match: (n) => n.type === 'code',
-    });
-
-    return !!match;
-  },
-
-  toggleBoldMark(editor) {
-    const isActive = CustomEditor.isBoldMarkActive(editor);
-    if (isActive) {
-      Editor.removeMark(editor, 'bold');
-    } else {
-      Editor.addMark(editor, 'bold', true);
-    }
-  },
-
-  toggleItalicMark(editor) {
-    const isActive = CustomEditor.isItalicMarkActive(editor);
-    if (isActive) {
-      Editor.removeMark(editor, 'italic');
-    } else {
-      Editor.addMark(editor, 'italic', true);
-    }
-  },
-
-  // toggleCodeBlock(editor) {
-  //   const isActive = CustomEditor.isCodeBlockActive(editor)
-  //   Transforms.setNodes(
-  //     editor,
-  //     { type: isActive ? null : 'code' },
-  //     { match: n => Editor.isBlock(editor, n) }
-  //   )
-  // },
-};
-
-export default function Home() {
+export default function Page() {
   const [editor] = useState(() => withReact(createEditor()));
-  // editor.isInline = (element) => {
-  //   return element.type === 'paragraph'
-  // }
 
-  const renderElement = useCallback((props: any) => {
+  const renderElement = useCallback((props: RenderElementProps) => {
     switch (props.element.type) {
-      case 'code':
-        return <CodeElement {...props} />;
+      case 'title':
+        return <TitleElement {...props} />;
+      case 'paragraph':
+        return <DefaultElement {...props} />;
       default:
         return <DefaultElement {...props} />;
     }
   }, []);
 
-  const renderLeaf = useCallback((props: any) => {
+  const renderLeaf = useCallback((props: RenderLeafProps) => {
     return <Leaf {...props} />;
   }, []);
 
-  const initialValue = useMemo(() => {
-    if (localStorage.getItem('content')) {
-      return (
-        JSON.parse(localStorage.getItem('content') || '') || [
+  const [data, setData] = useState<{
+    judul: Descendant[];
+    doa: Descendant[];
+    menimbang: Array<Descendant[]>;
+    mengingat: Descendant[];
+  }>({
+    judul: [
+      {
+        type: 'title',
+        children: [
           {
-            type: 'paragraph',
-            children: [{ text: 'A line of text in a paragraph.' }],
+            text: 'UNDANG-UNDANG REPUBLIK INDONESIA NOMOR 13 TAHUN 2003 TENTANG KETENAGAKERJAAN',
           },
-        ]
-      );
-    }
-    return [
+        ],
+      },
+    ],
+    doa: [
       {
         type: 'paragraph',
-        children: [{ text: 'A line of text in a paragraph.' }],
+        children: [
+          {
+            text: 'DENGAN RAHMAT TUHAN YANG MAHA ESA PRESIDEN REPUBLIK INDONESIA',
+          },
+        ],
       },
-    ];
+    ],
+    menimbang: [
+      [
+        {
+          type: 'paragraph',
+          children: [
+            {
+              text: 'Bahwa pembangunan nasional dilaksanakan dalam rangka pembangunan manusia Indonesia seutuhnya dan pembangunan masyarakat Indonesia seluruhnya untuk mewujudkan masyarakat yang sejahtera, adil, makmur, yang merata, baik materiil maupun spiritual berdasarkan Pancasila dan ',
+            },
+            {
+              text: 'Undang-Undang Dasar Negara Republik Indonesia Tahun 1945',
+              underline: true,
+            },
+            {
+              text: ';',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          children: [
+            {
+              text: 'Bahwa dalam pelaksanaan pembangunan nasional, tenaga kerja mempunyai peranan dan kedudukan yang sangat penting sebagai pelaku dan tujuan pembangunan;',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          children: [
+            {
+              text: 'Bahwa sesuai dengan peranan dan kedudukan tenaga kerja, diperlukan pembangunan ketenagakerjaan untuk meningkatkan kualitas tenaga kerja dan peran sertanya dalam pembangunan serta peningkatan perlindungan tenaga kerja dan keluarganya sesuai dengan harkat dan martabat kemanusiaan;',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          children: [
+            {
+              text: 'Bahwa perlindungan terhadap tenaga kerja dimaksudkan untuk menjamin hak-hak dasar pekerja/buruh dan menjamin kesamaan kesempatan serta perlakuan tanpa diskriminasi atas dasar apapun untuk mewujudkan kesejahteraan pekerja/buruh dan keluarganya dengan tetap memperhatikan perkembangan kemajuan dunia usaha;',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          children: [
+            {
+              text: 'Bahwa beberapa Undang-Undang di bidang ketenagakerjaan dipandang sudah tidak sesuai lagi dengan kebutuhan dan tuntutan pembangunan ketenagakerjaan, oleh karena itu perlu dicabut dan/atau ditarik kembali;',
+            },
+          ],
+        },
+      ],
+    ],
+    mengingat: [
+      {
+        type: 'paragraph',
+        children: [
+          {
+            text: 'Pasal 5 ayat (1), Pasal 20 ayat (2), Pasal 27 ayat (2), Pasal 28, dan Pasal 33 ayat (1) ',
+          },
+          {
+            text: 'Undang-Undang Dasar Negara Republik Indonesia Tahun 1945',
+            underline: true,
+          },
+          {
+            text: '.',
+          },
+        ],
+      },
+    ],
+  });
+
+  const [hoverPosition, setHoverPosition] = useState<
+    'pembukaan' | 'judul' | 'doa' | 'menimbang' | 'mengingat'
+  >();
+  const [activePosition, setActivePosition] = useState<
+    'pembukaan' | 'judul' | 'doa' | 'menimbang' | 'mengingat'
+  >();
+
+  const parentRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (parentRef.current && !parentRef.current.contains(e.target as any)) {
+        setActivePosition(undefined);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
   }, []);
-  const [isEdit, setIsEdit] = useState<boolean>(false);
+  useEffect(() => {
+    const handleMouseOver = (e: MouseEvent) => {
+      if (parentRef.current && !parentRef.current.contains(e.target as any)) {
+        setHoverPosition(undefined);
+      }
+    };
+
+    document.addEventListener('mouseover', handleMouseOver);
+    return () => document.removeEventListener('mouseover', handleMouseOver);
+  }, []);
+
+  useEffect(() => {
+    if (activePosition) {
+      Transforms.select(editor, {
+        offset: 0,
+        path: [0, 0],
+      });
+    }
+  }, [activePosition]);
 
   return (
-    <div className="flex justify-center mt-40">
-      {isEdit ? (
-        <Slate
-          onChange={(value) => {
-            const isAstChange = editor.operations.some(
-              (op) => 'set_selection' !== op.type
-            );
-            if (isAstChange) {
-              // console.log(value.map((node: any) => {
-              //   return Node.string(node)
-              // }).join('\n'))
-              // Save the value to Local Storage.
-              const content = JSON.stringify(value);
-              localStorage.setItem('content', content);
-            }
-          }}
-          editor={editor}
-          initialValue={initialValue}
-        >
-          <div>
-            <button
-              onMouseDown={(event) => {
-                event.preventDefault();
-                CustomEditor.toggleBoldMark(editor);
-              }}
-            >
-              Bold
-            </button>{' '}
-            <button
-              onMouseDown={(event) => {
-                event.preventDefault();
-                CustomEditor.toggleItalicMark(editor);
-              }}
-            >
-              Italic
-            </button>
-          </div>
-          <Editable
-            className={`min-w-[400px] max-w-[400px] border`}
-            onMouseEnter={() => {
-              console.log('onMouseEnter');
-            }}
-            onMouseLeave={() => {
-              console.log('onMouseLeave');
-            }}
-            autoFocus
-            // readOnly
-            renderElement={renderElement}
-            renderLeaf={renderLeaf}
-            onKeyDown={(event) => {
-              if (!event.ctrlKey && !event.metaKey) {
-                return;
-              }
+    <div ref={parentRef} className="mt-8 mx-auto w-[712px]">
+      <fieldset
+        className={`
+          border p-3 cursor-pointer
+          ${activePosition === 'pembukaan' || hoverPosition === 'pembukaan' ? 'border-blue-400' : 'border-neutral-400'}
+        `}
+        onClick={(e) => {
+          e.stopPropagation();
+          setActivePosition('pembukaan');
+        }}
+        onMouseOver={(e) => {
+          e.stopPropagation();
+          setHoverPosition('pembukaan');
+        }}
+      >
+        <legend className="ps-2 pe-2">Pembuka</legend>
 
-              // Replace the `onKeyDown` logic with our new commands.
-              switch (event.key) {
-                // case '`': {
-                //   event.preventDefault()
-                //   CustomEditor.toggleCodeBlock(editor)
-                //   break
-                // }
-
-                case 'b': {
-                  event.preventDefault();
-                  CustomEditor.toggleBoldMark(editor);
-                  break;
-                }
-
-                case 'i': {
-                  event.preventDefault();
-                  CustomEditor.toggleItalicMark(editor);
-                  break;
-                }
-              }
-            }}
-          />
-        </Slate>
-      ) : (
+        {/* START JUDUL */}
         <div
-          className={`border border-transparent hover:border-blue-200`}
-          onClick={() => {
-            setIsEdit(true);
+          className="relative"
+          onClick={(e) => {
+            e.stopPropagation();
+            setActivePosition('judul');
+          }}
+          onMouseOver={(e) => {
+            e.stopPropagation();
+            setHoverPosition('judul');
           }}
         >
-          An example text
+          <fieldset
+            className={`
+              px-4 py-2 border cursor-pointer
+              ${activePosition === 'judul' || hoverPosition === 'judul' ? 'border-blue-400' : 'border-neutral-400'}
+            `}
+          >
+            <legend className="ps-2 pe-2">Judul</legend>
+            {activePosition === 'judul' ? (
+              <Slate
+                editor={editor}
+                initialValue={data.judul}
+                onChange={(value) => setData({ ...data, judul: value })}
+              >
+                <Editable
+                  className={`
+                    w-full h-full m-0 p-0 focus:outline-none cursor-text
+                  `}
+                  renderElement={renderElement}
+                  renderLeaf={renderLeaf}
+                  autoFocus
+                />
+              </Slate>
+            ) : (
+              <h1
+                id="hol-judul-readonly"
+                className="font-bold text-center cursor-text"
+              >
+                {data.judul.map((node) => Node.string(node)).join('')}
+              </h1>
+            )}
+          </fieldset>
         </div>
-      )}
+        {/* END JUDUL */}
+
+        {/* START DOA */}
+        <div
+          className="relative"
+          onClick={(e) => {
+            e.stopPropagation();
+            setActivePosition('doa');
+          }}
+          onMouseOver={(e) => {
+            e.stopPropagation();
+            setHoverPosition('doa');
+          }}
+        >
+          <fieldset
+            className={`
+              px-4 py-2 border cursor-pointer
+              ${activePosition === 'doa' || hoverPosition === 'doa' ? 'border-blue-400' : 'border-neutral-400'}
+            `}
+          >
+            <legend className="ps-2 pe-2">Doa</legend>
+            {activePosition === 'doa' ? (
+              <Slate
+                editor={editor}
+                initialValue={data.doa}
+                onChange={(value) => setData({ ...data, doa: value })}
+              >
+                <Editable
+                  className={`
+                    w-full h-full m-0 p-0 focus:outline-none cursor-text text-center
+                  `}
+                  renderElement={renderElement}
+                  renderLeaf={renderLeaf}
+                  autoFocus
+                  onKeyDown={(event) => {
+                    if (!event.ctrlKey && !event.metaKey) {
+                      return;
+                    }
+
+                    switch (event.key) {
+                      case 'b': {
+                        event.preventDefault();
+                        CustomEditor.toggleBoldMark(editor);
+                        break;
+                      }
+
+                      case 'i': {
+                        event.preventDefault();
+                        CustomEditor.toggleItalicMark(editor);
+                        break;
+                      }
+
+                      case 'u': {
+                        event.preventDefault();
+                        CustomEditor.toggleUnderlineMark(editor);
+                        break;
+                      }
+                    }
+                  }}
+                />
+              </Slate>
+            ) : (
+              <p id="hol-doa-readonly" className="cursor-text text-center">
+                {data.doa.map((node: any) => {
+                  return node.children.map((text: CustomText) => {
+                    return (
+                      <>
+                        <span
+                          className={`
+                          ${text.bold ? 'font-bold' : ''}
+                          ${text.italic ? 'italic' : ''}
+                          ${text.underline ? 'underline' : ''}
+                        `}
+                        >
+                          {text.text}
+                        </span>
+                        <br />
+                      </>
+                    );
+                  });
+                })}
+              </p>
+            )}
+          </fieldset>
+          {activePosition === 'doa' && <Toolbar editor={editor} />}
+        </div>
+        {/* END DOA */}
+      </fieldset>
     </div>
   );
 }
