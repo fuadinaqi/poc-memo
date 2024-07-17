@@ -12,6 +12,7 @@ import {
   RenderLeafProps,
 } from 'slate-react';
 import Toolbar, { CustomEditor } from './_components/toolbar';
+import Add from './_components/add';
 
 type CustomElement = { type: 'paragraph' | 'title'; children: CustomText[] };
 type CustomText = {
@@ -76,7 +77,10 @@ export default function Page() {
 
   const [data, setData] = useState<{
     judul: Descendant[];
-    doa: Descendant[];
+    doa: {
+      text: Descendant[];
+      numbering?: Array<Descendant[]>;
+    };
     menimbang: Array<Descendant[]>;
     mengingat: Descendant[];
   }>({
@@ -90,16 +94,18 @@ export default function Page() {
         ],
       },
     ],
-    doa: [
-      {
-        type: 'paragraph',
-        children: [
-          {
-            text: 'DENGAN RAHMAT TUHAN YANG MAHA ESA PRESIDEN REPUBLIK INDONESIA',
-          },
-        ],
-      },
-    ],
+    doa: {
+      text: [
+        {
+          type: 'paragraph',
+          children: [
+            {
+              text: 'DENGAN RAHMAT TUHAN YANG MAHA ESA PRESIDEN REPUBLIK INDONESIA',
+            },
+          ],
+        },
+      ],
+    },
     menimbang: [
       [
         {
@@ -171,11 +177,13 @@ export default function Page() {
   });
 
   const [hoverPosition, setHoverPosition] = useState<
-    'pembukaan' | 'judul' | 'doa' | 'menimbang' | 'mengingat'
+    'pembukaan' | 'judul' | 'doa' | 'doa_numbering' | 'menimbang' | 'mengingat'
   >();
   const [activePosition, setActivePosition] = useState<
-    'pembukaan' | 'judul' | 'doa' | 'menimbang' | 'mengingat'
+    'pembukaan' | 'judul' | 'doa' | 'doa_numbering' | 'menimbang' | 'mengingat'
   >();
+  const [indexHoverPosition, setIndexHoverPosition] = useState<number>(0);
+  const [indexActivePosition, setIndexActivePosition] = useState<number>(0);
 
   const parentRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -207,6 +215,32 @@ export default function Page() {
       });
     }
   }, [activePosition]);
+
+  const onAddNumbering = () => {
+    setData((prev) => {
+      const newNumbering: Descendant[][] | undefined = [
+        ...(prev.doa.numbering ?? []),
+        [
+          {
+            type: 'paragraph',
+            children: [{ text: '' }],
+          },
+        ],
+      ];
+      return {
+        ...prev,
+        doa: {
+          ...prev.doa,
+          numbering: newNumbering,
+        },
+      };
+    });
+    setTimeout(() => {
+      setActivePosition('doa_numbering');
+      const numberingLength = data.doa.numbering?.length || 0;
+      setIndexActivePosition(numberingLength - 1);
+    }, 500);
+  };
 
   return (
     <div ref={parentRef} className="mt-8 mx-auto w-[712px]">
@@ -294,8 +328,10 @@ export default function Page() {
             {activePosition === 'doa' ? (
               <Slate
                 editor={editor}
-                initialValue={data.doa}
-                onChange={(value) => setData({ ...data, doa: value })}
+                initialValue={data.doa.text}
+                onChange={(value) =>
+                  setData({ ...data, doa: { ...data.doa, text: value } })
+                }
               >
                 <Editable
                   className={`
@@ -333,28 +369,115 @@ export default function Page() {
               </Slate>
             ) : (
               <p id="hol-doa-readonly" className="cursor-text text-center">
-                {data.doa.map((node: any) => {
-                  return node.children.map((text: CustomText) => {
-                    return (
-                      <>
-                        <span
-                          className={`
+                {data.doa.text.map((node: any) => {
+                  return (
+                    <>
+                      {node.children.map((text: CustomText) => {
+                        return (
+                          <span
+                            className={`
                           ${text.bold ? 'font-bold' : ''}
                           ${text.italic ? 'italic' : ''}
                           ${text.underline ? 'underline' : ''}
                         `}
-                        >
-                          {text.text}
-                        </span>
-                        <br />
-                      </>
-                    );
-                  });
+                          >
+                            {text.text}
+                          </span>
+                        );
+                      })}
+                      <br />
+                    </>
+                  );
                 })}
               </p>
             )}
+
+            {data.doa.numbering?.map((numbering, i) => (
+              <div
+                key={i}
+                className="relative"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActivePosition('doa_numbering');
+                  setIndexActivePosition(i);
+                }}
+                onMouseOver={(e) => {
+                  e.stopPropagation();
+                  setHoverPosition('doa_numbering');
+                  setIndexHoverPosition(i);
+                }}
+              >
+                <fieldset
+                  className={`
+                    px-4 py-2 border cursor-pointer
+                    ${(activePosition === 'doa_numbering' || hoverPosition === 'doa_numbering') && (i === indexActivePosition || i === indexHoverPosition) ? 'border-blue-400' : 'border-neutral-400'}
+                  `}
+                >
+                  <legend className="ps-2 pe-2">Numbering</legend>
+                  {activePosition === 'doa_numbering' &&
+                  i === indexActivePosition ? (
+                    <Slate
+                      editor={editor}
+                      initialValue={numbering}
+                      onChange={(value) => {
+                        setData((prev) => ({
+                          ...prev,
+                          doa: {
+                            ...prev.doa,
+                            numbering: prev.doa.numbering?.map((n, j) =>
+                              j === i ? value : n
+                            ),
+                          },
+                        }));
+                      }}
+                    >
+                      <Editable
+                        className={`
+                          w-full h-full m-0 p-0 focus:outline-none cursor-text
+                        `}
+                        renderElement={renderElement}
+                        renderLeaf={renderLeaf}
+                        autoFocus
+                      />
+                    </Slate>
+                  ) : (
+                    <p
+                      id={`hol-doa-numbering-${i}`}
+                      className="cursor-text flex gap-2"
+                    >
+                      <span>{i + 1}. </span>
+                      <div>
+                        {numbering.map((node: any) => {
+                          return (
+                            <>
+                              {node.children.map((text: CustomText) => {
+                                return (
+                                  <>
+                                    <span
+                                      className={`
+                                        ${text.bold ? 'font-bold' : ''}
+                                        ${text.italic ? 'italic' : ''}
+                                        ${text.underline ? 'underline' : ''}
+                                      `}
+                                    >
+                                      {text.text}
+                                    </span>
+                                    <br />
+                                  </>
+                                );
+                              })}
+                            </>
+                          );
+                        })}
+                      </div>
+                    </p>
+                  )}
+                </fieldset>
+              </div>
+            ))}
           </fieldset>
           {activePosition === 'doa' && <Toolbar editor={editor} />}
+          {activePosition === 'doa' && <Add onClick={onAddNumbering} />}
         </div>
         {/* END DOA */}
       </fieldset>
