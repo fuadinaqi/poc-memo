@@ -214,6 +214,7 @@ export default function Page() {
         path: [0, 0],
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePosition]);
 
   const onAddNumbering = () => {
@@ -372,9 +373,10 @@ export default function Page() {
                 {data.doa.text.map((node: any) => {
                   return (
                     <>
-                      {node.children.map((text: CustomText) => {
+                      {node.children.map((text: CustomText, i: number) => {
                         return (
                           <span
+                            key={i}
                             className={`
                           ${text.bold ? 'font-bold' : ''}
                           ${text.italic ? 'italic' : ''}
