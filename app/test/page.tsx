@@ -159,7 +159,7 @@ function Component() {
     return (
       <fieldset
         className={`
-          border cursor-pointer
+          border p-2 cursor-pointer
           ${activePosition === alphabet.id || hoverPosition === alphabet.id ? 'border-blue-400' : 'border-transparent'}
         `}
         onClick={(e) => {
@@ -190,7 +190,7 @@ function Component() {
     return (
       <fieldset
         className={`
-          border cursor-pointer
+          border p-2 cursor-pointer
           ${activePosition === bullet.id || hoverPosition === bullet.id ? 'border-blue-400' : 'border-transparent'}
         `}
         onClick={(e) => {
@@ -216,7 +216,7 @@ function Component() {
     return (
       <fieldset
         className={`
-          border cursor-pointer
+          border p-2 cursor-pointer
           ${activePosition === numbering.id || hoverPosition === numbering.id ? 'border-blue-400' : 'border-transparent'}
         `}
         onClick={(e) => {

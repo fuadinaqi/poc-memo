@@ -1,4 +1,4 @@
-import React, { createContext, useState } from 'react';
+import React, { createContext, useEffect, useMemo, useState } from 'react';
 import { BaseEditor } from 'slate';
 import { ReactEditor } from 'slate-react';
 import { DUMMY_BADAN } from '../_constants/badan';
@@ -168,6 +168,17 @@ export const SmartdocContext = createContext<{
   setIndexHoverPosition: React.Dispatch<React.SetStateAction<number>>;
   indexActivePosition: number;
   setIndexActivePosition: React.Dispatch<React.SetStateAction<number>>;
+
+  selectedBlock:
+    | Bab
+    | Bagian
+    | Paragraf
+    | Pasal
+    | Ayat
+    | Numbering
+    | Alphabet
+    | Bullet
+    | TextContent;
 }>({
   hoverPosition: 'idle',
   setHoverPosition: () => {},
@@ -177,6 +188,11 @@ export const SmartdocContext = createContext<{
   setIndexHoverPosition: () => {},
   indexActivePosition: 0,
   setIndexActivePosition: () => {},
+  selectedBlock: {
+    id: '',
+    type: 'text_content',
+    text: [],
+  },
 });
 
 const DUMMY_PEMBUKAAN: Pembukaan = {
@@ -347,6 +363,32 @@ const SmartdocProvider = ({ children }: { children: React.ReactNode }) => {
   const [indexHoverPosition, setIndexHoverPosition] = useState<number>(0);
   const [indexActivePosition, setIndexActivePosition] = useState<number>(0);
 
+  const selectedBlock = useMemo(() => {
+    if (activePosition && activePosition !== 'badan') {
+      const findObjectById = (data: any, id: any) => {
+        for (const item of data) {
+          if (item.id === id) {
+            return item;
+          }
+          if (item.list) {
+            const result: any = findObjectById(item.list, id);
+            if (result) {
+              return result;
+            }
+          }
+        }
+        return null;
+      };
+
+      return findObjectById(badan, activePosition);
+    }
+    return {
+      id: '',
+      type: 'text_content',
+      text: [],
+    };
+  }, [activePosition]);
+
   return (
     <SmartdocContext.Provider
       value={{
@@ -364,6 +406,8 @@ const SmartdocProvider = ({ children }: { children: React.ReactNode }) => {
         setIndexHoverPosition,
         indexActivePosition,
         setIndexActivePosition,
+
+        selectedBlock,
       }}
     >
       {children}
