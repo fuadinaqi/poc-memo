@@ -160,10 +160,10 @@ export const SmartdocContext = createContext<{
   badan?: Badan;
   setBadan?: React.Dispatch<React.SetStateAction<Badan>>;
 
-  hoverPosition: SmartdocPosition;
-  setHoverPosition: React.Dispatch<React.SetStateAction<SmartdocPosition>>;
-  activePosition: SmartdocPosition;
-  setActivePosition: React.Dispatch<React.SetStateAction<SmartdocPosition>>;
+  hoverPosition: string;
+  setHoverPosition: React.Dispatch<React.SetStateAction<string>>;
+  activePosition: string;
+  setActivePosition: React.Dispatch<React.SetStateAction<string>>;
   indexHoverPosition: number;
   setIndexHoverPosition: React.Dispatch<React.SetStateAction<number>>;
   indexActivePosition: number;
@@ -342,9 +342,8 @@ const SmartdocProvider = ({ children }: { children: React.ReactNode }) => {
   const [pembukaan, setPembukaan] = useState<Pembukaan>(DUMMY_PEMBUKAAN);
   const [badan, setBadan] = useState<Badan>(DUMMY_BADAN);
 
-  const [hoverPosition, setHoverPosition] = useState<SmartdocPosition>('idle');
-  const [activePosition, setActivePosition] =
-    useState<SmartdocPosition>('idle');
+  const [hoverPosition, setHoverPosition] = useState<string>('');
+  const [activePosition, setActivePosition] = useState<string>('');
   const [indexHoverPosition, setIndexHoverPosition] = useState<number>(0);
   const [indexActivePosition, setIndexActivePosition] = useState<number>(0);
 

@@ -59,7 +59,7 @@ function Component() {
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (parentRef.current && !parentRef.current.contains(e.target as any)) {
-        setActivePosition('idle');
+        setActivePosition('');
       }
     };
 
@@ -69,7 +69,7 @@ function Component() {
   useEffect(() => {
     const handleMouseOver = (e: MouseEvent) => {
       if (parentRef.current && !parentRef.current.contains(e.target as any)) {
-        setHoverPosition('idle');
+        setHoverPosition('');
       }
     };
 
@@ -122,15 +122,15 @@ function Component() {
       <fieldset
         className={`
           border cursor-pointer
-          ${activePosition === 'badan_text_content' || hoverPosition === 'badan_text_content' ? 'border-blue-400' : 'border-transparent'}
+          ${activePosition === text.id || hoverPosition === text.id ? 'border-blue-400' : 'border-transparent'}
         `}
         onClick={(e) => {
           e.stopPropagation();
-          setActivePosition('badan_text_content');
+          setActivePosition(text.id);
         }}
         onMouseOver={(e) => {
           e.stopPropagation();
-          setHoverPosition('badan_text_content');
+          setHoverPosition(text.id);
         }}
       >
         {/* <legend className="ps-1 pe-1">TextContent</legend> */}
@@ -160,15 +160,15 @@ function Component() {
       <fieldset
         className={`
           border cursor-pointer
-          ${activePosition === 'badan_alphabet' || hoverPosition === 'badan_alphabet' ? 'border-blue-400' : 'border-transparent'}
+          ${activePosition === alphabet.id || hoverPosition === alphabet.id ? 'border-blue-400' : 'border-transparent'}
         `}
         onClick={(e) => {
           e.stopPropagation();
-          setActivePosition('badan_alphabet');
+          setActivePosition(alphabet.id);
         }}
         onMouseOver={(e) => {
           e.stopPropagation();
-          setHoverPosition('badan_alphabet');
+          setHoverPosition(alphabet.id);
         }}
       >
         {/* <legend className="ps-1 pe-1">Alphabet</legend> */}
@@ -191,15 +191,15 @@ function Component() {
       <fieldset
         className={`
           border cursor-pointer
-          ${activePosition === 'badan_bullet' || hoverPosition === 'badan_bullet' ? 'border-blue-400' : 'border-transparent'}
+          ${activePosition === bullet.id || hoverPosition === bullet.id ? 'border-blue-400' : 'border-transparent'}
         `}
         onClick={(e) => {
           e.stopPropagation();
-          setActivePosition('badan_bullet');
+          setActivePosition(bullet.id);
         }}
         onMouseOver={(e) => {
           e.stopPropagation();
-          setHoverPosition('badan_bullet');
+          setHoverPosition(bullet.id);
         }}
       >
         {/* <legend className="ps-1 pe-1">Bullet</legend> */}
@@ -217,15 +217,15 @@ function Component() {
       <fieldset
         className={`
           border cursor-pointer
-          ${activePosition === 'badan_numbering' || hoverPosition === 'badan_numbering' ? 'border-blue-400' : 'border-transparent'}
+          ${activePosition === numbering.id || hoverPosition === numbering.id ? 'border-blue-400' : 'border-transparent'}
         `}
         onClick={(e) => {
           e.stopPropagation();
-          setActivePosition('badan_numbering');
+          setActivePosition(numbering.id);
         }}
         onMouseOver={(e) => {
           e.stopPropagation();
-          setHoverPosition('badan_numbering');
+          setHoverPosition(numbering.id);
         }}
       >
         {/* <legend className="ps-1 pe-1">TextContent</legend> */}
@@ -252,15 +252,15 @@ function Component() {
       <fieldset
         className={`
           border cursor-pointer
-          ${activePosition === 'badan_ayat' || hoverPosition === 'badan_ayat' ? 'border-blue-400' : 'border-transparent'}
+          ${activePosition === ayat.id || hoverPosition === ayat.id ? 'border-blue-400' : 'border-transparent'}
         `}
         onClick={(e) => {
           e.stopPropagation();
-          setActivePosition('badan_ayat');
+          setActivePosition(ayat.id);
         }}
         onMouseOver={(e) => {
           e.stopPropagation();
-          setHoverPosition('badan_ayat');
+          setHoverPosition(ayat.id);
         }}
       >
         {/* <legend className="ps-1 pe-1 text-center">Ayat - {ayat.id}</legend> */}
@@ -306,15 +306,15 @@ function Component() {
       <fieldset
         className={`
           border p-1 cursor-pointer
-          ${activePosition === 'badan_pasal' || hoverPosition === 'badan_pasal' ? 'border-blue-400' : 'border-transparent'}
+          ${activePosition === pasal.id || hoverPosition === pasal.id ? 'border-blue-400' : 'border-transparent'}
         `}
         onClick={(e) => {
           e.stopPropagation();
-          setActivePosition('badan_pasal');
+          setActivePosition(pasal.id);
         }}
         onMouseOver={(e) => {
           e.stopPropagation();
-          setHoverPosition('badan_pasal');
+          setHoverPosition(pasal.id);
         }}
       >
         <legend className="ps-1 pe-1 text-center">{pasal.title}</legend>
@@ -351,15 +351,15 @@ function Component() {
       <fieldset
         className={`
           border p-1 cursor-pointer
-          ${activePosition === 'badan_paragraf' || hoverPosition === 'badan_paragraf' ? 'border-blue-400' : 'border-transparent'}
+          ${activePosition === paragraf.id || hoverPosition === paragraf.id ? 'border-blue-400' : 'border-transparent'}
         `}
         onClick={(e) => {
           e.stopPropagation();
-          setActivePosition('badan_paragraf');
+          setActivePosition(paragraf.id);
         }}
         onMouseOver={(e) => {
           e.stopPropagation();
-          setHoverPosition('badan_paragraf');
+          setHoverPosition(paragraf.id);
         }}
       >
         <legend className="ps-1 pe-1 text-center">{paragraf.title}</legend>
@@ -387,15 +387,15 @@ function Component() {
       <fieldset
         className={`
           border p-1 cursor-pointer
-          ${activePosition === 'badan_bagian' || hoverPosition === 'badan_bagian' ? 'border-blue-400' : 'border-transparent'}
+          ${activePosition === bagian.id || hoverPosition === bagian.id ? 'border-blue-400' : 'border-transparent'}
         `}
         onClick={(e) => {
           e.stopPropagation();
-          setActivePosition('badan_bagian');
+          setActivePosition(bagian.id);
         }}
         onMouseOver={(e) => {
           e.stopPropagation();
-          setHoverPosition('badan_bagian');
+          setHoverPosition(bagian.id);
         }}
       >
         <legend className="ps-1 pe-1 text-center">{bagian.title}</legend>
@@ -430,15 +430,15 @@ function Component() {
         key={index}
         className={`
           border p-1 cursor-pointer
-          ${activePosition === 'badan' || hoverPosition === 'badan' ? 'border-blue-400' : 'border-transparent'}
+          ${activePosition === item.id || hoverPosition === item.id ? 'border-blue-400' : 'border-transparent'}
         `}
         onClick={(e) => {
           e.stopPropagation();
-          setActivePosition('badan');
+          setActivePosition(item.id);
         }}
         onMouseOver={(e) => {
           e.stopPropagation();
-          setHoverPosition('badan');
+          setHoverPosition(item.id);
         }}
       >
         <legend className="ps-1 pe-1 uppercase text-center">
@@ -486,15 +486,15 @@ function Component() {
       <fieldset
         className={`
           border p-1 cursor-pointer
-          ${activePosition === 'pembukaan' || hoverPosition === 'pembukaan' ? 'border-blue-400' : 'border-transparent'}
+          ${activePosition === 'badan' || hoverPosition === 'badan' ? 'border-blue-400' : 'border-transparent'}
         `}
         onClick={(e) => {
           e.stopPropagation();
-          setActivePosition('pembukaan');
+          setActivePosition('badan');
         }}
         onMouseOver={(e) => {
           e.stopPropagation();
-          setHoverPosition('pembukaan');
+          setHoverPosition('badan');
         }}
       >
         <legend className="ps-1 pe-1">Badan</legend>
