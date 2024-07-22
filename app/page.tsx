@@ -13,9 +13,11 @@ import {
 } from 'slate-react';
 import Toolbar, { CustomEditor } from './_components/toolbar';
 import Add from './_components/add';
+import SmartdocEditor from './_components/editor';
+import { SmartdocViewText } from './_components/view';
 
 type CustomElement = { type: 'paragraph' | 'title'; children: CustomText[] };
-type CustomText = {
+export type CustomText = {
   text: string;
   bold?: boolean;
   italic?: boolean;
@@ -207,15 +209,15 @@ export default function Page() {
     return () => document.removeEventListener('mouseover', handleMouseOver);
   }, []);
 
-  useEffect(() => {
-    if (activePosition) {
-      Transforms.select(editor, {
-        offset: 0,
-        path: [0, 0],
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activePosition]);
+  // useEffect(() => {
+  //   if (activePosition) {
+  //     Transforms.select(editor, {
+  //       offset: 0,
+  //       path: [0, 0],
+  //     });
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [activePosition]);
 
   const onAddNumbering = () => {
     setData((prev) => {
@@ -327,65 +329,19 @@ export default function Page() {
           >
             <legend className="ps-2 pe-2">Doa</legend>
             {activePosition === 'doa' ? (
-              <Slate
-                editor={editor}
+              <SmartdocEditor
                 initialValue={data.doa.text}
                 onChange={(value) =>
                   setData({ ...data, doa: { ...data.doa, text: value } })
                 }
-              >
-                <Editable
-                  className={`
-                    w-full h-full m-0 p-0 focus:outline-none cursor-text text-center
-                  `}
-                  renderElement={renderElement}
-                  renderLeaf={renderLeaf}
-                  autoFocus
-                  onKeyDown={(event) => {
-                    if (!event.ctrlKey && !event.metaKey) {
-                      return;
-                    }
-
-                    switch (event.key) {
-                      case 'b': {
-                        event.preventDefault();
-                        CustomEditor.toggleBoldMark(editor);
-                        break;
-                      }
-
-                      case 'i': {
-                        event.preventDefault();
-                        CustomEditor.toggleItalicMark(editor);
-                        break;
-                      }
-
-                      case 'u': {
-                        event.preventDefault();
-                        CustomEditor.toggleUnderlineMark(editor);
-                        break;
-                      }
-                    }
-                  }}
-                />
-              </Slate>
+              />
             ) : (
               <p id="hol-doa-readonly" className="cursor-text text-center">
                 {data.doa.text.map((node: any) => {
                   return (
                     <>
                       {node.children.map((text: CustomText, i: number) => {
-                        return (
-                          <span
-                            key={i}
-                            className={`
-                          ${text.bold ? 'font-bold' : ''}
-                          ${text.italic ? 'italic' : ''}
-                          ${text.underline ? 'underline' : ''}
-                        `}
-                          >
-                            {text.text}
-                          </span>
-                        );
+                        return <SmartdocViewText key={i} text={text} />;
                       })}
                       <br />
                     </>

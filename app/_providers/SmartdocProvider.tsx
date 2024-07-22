@@ -1,0 +1,377 @@
+import React, { createContext, useState } from 'react';
+import { BaseEditor } from 'slate';
+import { ReactEditor } from 'slate-react';
+import { DUMMY_BADAN } from '../_constants/badan';
+
+type CustomElement = { type: 'paragraph' | 'title'; children: CustomText[] };
+export type CustomText = {
+  text: string;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+};
+
+declare module 'slate' {
+  interface CustomTypes {
+    Editor: BaseEditor & ReactEditor;
+    Element: CustomElement;
+    Text: CustomText;
+  }
+}
+
+export type SmartdocEditorType =
+  | 'plaintext'
+  | 'numbering'
+  | 'bullet'
+  | 'alphabet'
+  | 'bab'
+  | 'bagian'
+  | 'paragraf'
+  | 'pasal'
+  | 'ayat';
+
+export type SmartdocPosition =
+  // PEMBUKAAN
+  | 'pembukaan'
+  | 'pembukaan_judul'
+  | 'pembukaan_doa'
+  | 'pembukaan_menimbang'
+  | 'pembukaan_mengingat'
+  | 'pembukaan_setuju'
+  | 'pembukaan_memutuskan'
+  // PEMBUKAAN
+
+  // BADAN
+  | 'badan'
+  | 'badan_bab'
+  | 'badan_bagian'
+  | 'badan_paragraf'
+  | 'badan_pasal'
+  | 'badan_ayat'
+  | 'badan_numbering'
+  | 'badan_alphabet'
+  | 'badan_bullet'
+  | 'badan_text_content'
+  // BADAN
+
+  // PENUTUP
+  | 'penutup'
+  // PENUTUP
+  | 'idle';
+
+export type Pembukaan = {
+  judul: {
+    editorType: SmartdocEditorType;
+    text: CustomElement[];
+  };
+  doa: {
+    editorType: SmartdocEditorType;
+    text: CustomElement[];
+  };
+  menimbang: {
+    editorType: SmartdocEditorType;
+    list: Array<CustomElement[]>;
+  };
+  mengingat: {
+    editorType: SmartdocEditorType;
+    text: CustomElement[];
+  };
+  setuju: {
+    editorType: SmartdocEditorType;
+    text: CustomElement[];
+  };
+  memutuskan: {
+    editorType: SmartdocEditorType;
+    text: CustomElement[];
+  };
+};
+
+export type TextContent = {
+  id: string;
+  type: 'text_content';
+  text: CustomElement[];
+  alphabet?: Alphabet;
+  bullet?: Bullet;
+};
+
+export type Bullet = {
+  id: string;
+  type: 'bullet';
+  list: Array<Omit<TextContent, 'alphabet' | 'bullet'>>;
+};
+
+export type Alphabet = {
+  id: string;
+  type: 'alphabet';
+  list: Array<Omit<TextContent, 'alphabet' | 'bullet'>>;
+};
+
+export type Numbering = {
+  id: string;
+  type: 'numbering';
+  list: Array<TextContent>;
+};
+
+export type Ayat = {
+  id: string;
+  type: 'ayat';
+  text?: CustomElement[];
+  list?: Array<Numbering | Alphabet | Bullet>;
+};
+
+export type Pasal = {
+  id: string;
+  type: 'pasal';
+  title: string;
+  text?: CustomElement[];
+  list?: Array<Ayat | Numbering | Alphabet | Bullet>;
+};
+
+export type Paragraf = {
+  id: string;
+  type: 'paragraf';
+  title: string;
+  text: CustomElement[];
+  list?: Array<Pasal>;
+};
+
+export type Bagian = {
+  id: string;
+  type: 'bagian';
+  title: string;
+  text: CustomElement[];
+  list?: Array<Paragraf | Pasal>;
+};
+
+export type Bab = {
+  id: string;
+  type: 'bab';
+  title: string;
+  text: CustomElement[];
+  list?: Array<Bagian | Paragraf | Pasal>;
+};
+
+export type Badan = Array<Bab | Bagian | Paragraf | Pasal>;
+
+export const SmartdocContext = createContext<{
+  pembukaan?: Pembukaan;
+  setPembukaan?: React.Dispatch<React.SetStateAction<Pembukaan>>;
+
+  badan?: Badan;
+  setBadan?: React.Dispatch<React.SetStateAction<Badan>>;
+
+  hoverPosition: SmartdocPosition;
+  setHoverPosition: React.Dispatch<React.SetStateAction<SmartdocPosition>>;
+  activePosition: SmartdocPosition;
+  setActivePosition: React.Dispatch<React.SetStateAction<SmartdocPosition>>;
+  indexHoverPosition: number;
+  setIndexHoverPosition: React.Dispatch<React.SetStateAction<number>>;
+  indexActivePosition: number;
+  setIndexActivePosition: React.Dispatch<React.SetStateAction<number>>;
+}>({
+  hoverPosition: 'idle',
+  setHoverPosition: () => {},
+  activePosition: 'idle',
+  setActivePosition: () => {},
+  indexHoverPosition: 0,
+  setIndexHoverPosition: () => {},
+  indexActivePosition: 0,
+  setIndexActivePosition: () => {},
+});
+
+const DUMMY_PEMBUKAAN: Pembukaan = {
+  judul: {
+    editorType: 'plaintext',
+    text: [
+      {
+        type: 'title',
+        children: [
+          {
+            text: 'UNDANG-UNDANG REPUBLIK INDONESIA NOMOR 40 TAHUN 2007 TENTANG PERSEROAN TERBATAS',
+          },
+        ],
+      },
+    ],
+  },
+  doa: {
+    editorType: 'plaintext',
+    text: [
+      {
+        type: 'paragraph',
+        children: [
+          {
+            text: 'DENGAN RAHMAT TUHAN YANG MAHA ESA PRESIDEN REPUBLIK INDONESIA',
+          },
+        ],
+      },
+    ],
+  },
+  menimbang: {
+    editorType: 'numbering',
+    list: [
+      [
+        {
+          type: 'paragraph',
+          children: [
+            {
+              text: 'bahwa perekonomian nasional yang diselenggarakan berdasar atas demokrasi ekonomi dengan prinsip kebersamaan, efisiensi berkeadilan, berkelanjutan, berwawasan lingkungan, kemandirian, serta dengan menjaga keseimbangan kemajuan dan kesatuan ekonomi nasional, perlu didukung oleh kelembagaan perekonomian yang kokoh dalam rangka mewujudkan kesejahteraan masyarakat;',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          children: [
+            {
+              text: 'bahwa dalam rangka lebih meningkatkan pembangunan perekonomian nasional dan sekaligus memberikan landasan yang kokoh bagi dunia usaha dalam menghadapi perkembangan perekonomian dunia dan kemajuan ilmu pengetahuan dan teknologi di era globalisasi pada masa mendatang, perlu didukung oleh suatu undang-undang yang mengatur tentang perseroan terbatas yang dapat menjamin terselenggaranya iklim dunia usaha yang kondusif;',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          children: [
+            {
+              text: 'bahwa perseroan terbatas sebagai salah satu pilar pembangunan perekonomian nasional perlu diberikan landasan hukum untuk lebih memacu pembangunan nasional yang disusun sebagai usaha bersama berdasar atas asas kekeluargaan;',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          children: [
+            {
+              text: 'bahwa Undang-Undang Nomor 1 Tahun 1995 tentang Perseroan Terbatas dipandang sudah tidak sesuai lagi dengan perkembangan hukum dan kebutuhan masyarakat sehingga perlu diganti dengan undang-undang yang baru;',
+            },
+            {
+              text: ' Undang-Undang Nomor 1 Tahun 1995 ',
+              underline: true,
+              bold: true,
+            },
+            {
+              text: 'tentang Perseroan Terbatas dipandang sudah tidak sesuai lagi dengan perkembangan hukum dan kebutuhan masyarakat sehingga perlu diganti dengan undang-undang yang baru;',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          children: [
+            {
+              text: 'Pasal 5 ayat (1), Pasal 20, dan Pasal 33 ',
+            },
+            {
+              text: 'Undang-Undang Dasar Negara Republik Indonesia Tahun 1945.',
+              underline: true,
+              bold: true,
+            },
+          ],
+        },
+      ],
+    ],
+  },
+  mengingat: {
+    editorType: 'plaintext',
+    text: [
+      {
+        type: 'paragraph',
+        children: [
+          {
+            text: 'Pasal 5 ayat (1), Pasal 20 ayat (2), Pasal 27 ayat (2), Pasal 28, dan Pasal 33 ayat (1) ',
+          },
+          {
+            text: 'Undang-Undang Dasar Negara Republik Indonesia Tahun 1945',
+            underline: true,
+          },
+          {
+            text: '.',
+          },
+        ],
+      },
+    ],
+  },
+  setuju: {
+    editorType: 'plaintext',
+    text: [
+      {
+        type: 'paragraph',
+        children: [
+          {
+            text: 'Dengan Persetujuan Bersama:',
+          },
+        ],
+      },
+      {
+        type: 'paragraph',
+        children: [
+          {
+            text: 'DEWAN PERWAKILAN RAKYAT REPUBLIK INDONESIA',
+          },
+        ],
+      },
+      {
+        type: 'paragraph',
+        children: [
+          {
+            text: 'DAN',
+          },
+        ],
+      },
+      {
+        type: 'paragraph',
+        children: [
+          {
+            text: 'PRESIDEN REPUBLIK INDONESIA',
+          },
+        ],
+      },
+    ],
+  },
+  memutuskan: {
+    editorType: 'plaintext',
+    text: [
+      {
+        type: 'paragraph',
+        children: [
+          {
+            text: 'UNDANG-UNDANG TENTANG PERSEROAN TERBATAS.',
+          },
+        ],
+      },
+    ],
+  },
+};
+
+const SmartdocProvider = ({ children }: { children: React.ReactNode }) => {
+  const [pembukaan, setPembukaan] = useState<Pembukaan>(DUMMY_PEMBUKAAN);
+  const [badan, setBadan] = useState<Badan>(DUMMY_BADAN);
+
+  const [hoverPosition, setHoverPosition] = useState<SmartdocPosition>('idle');
+  const [activePosition, setActivePosition] =
+    useState<SmartdocPosition>('idle');
+  const [indexHoverPosition, setIndexHoverPosition] = useState<number>(0);
+  const [indexActivePosition, setIndexActivePosition] = useState<number>(0);
+
+  return (
+    <SmartdocContext.Provider
+      value={{
+        pembukaan,
+        setPembukaan,
+
+        badan,
+        setBadan,
+
+        hoverPosition,
+        setHoverPosition,
+        activePosition,
+        setActivePosition,
+        indexHoverPosition,
+        setIndexHoverPosition,
+        indexActivePosition,
+        setIndexActivePosition,
+      }}
+    >
+      {children}
+    </SmartdocContext.Provider>
+  );
+};
+
+export const useSmartdocContext = () => React.useContext(SmartdocContext);
+
+export default SmartdocProvider;
