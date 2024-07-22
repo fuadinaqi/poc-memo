@@ -20,7 +20,7 @@ declare module 'slate' {
 }
 
 export type SmartdocEditorType =
-  | 'plaintext'
+  | 'text_content'
   | 'numbering'
   | 'bullet'
   | 'alphabet'
@@ -157,8 +157,8 @@ export const SmartdocContext = createContext<{
   pembukaan?: Pembukaan;
   setPembukaan?: React.Dispatch<React.SetStateAction<Pembukaan>>;
 
-  badan?: Badan;
-  setBadan?: React.Dispatch<React.SetStateAction<Badan>>;
+  badan: Badan;
+  setBadan: React.Dispatch<React.SetStateAction<Badan>>;
 
   hoverPosition: string;
   setHoverPosition: React.Dispatch<React.SetStateAction<string>>;
@@ -180,6 +180,8 @@ export const SmartdocContext = createContext<{
     | Bullet
     | TextContent;
 }>({
+  badan: [],
+  setBadan: () => {},
   hoverPosition: 'idle',
   setHoverPosition: () => {},
   activePosition: 'idle',
@@ -197,7 +199,7 @@ export const SmartdocContext = createContext<{
 
 const DUMMY_PEMBUKAAN: Pembukaan = {
   judul: {
-    editorType: 'plaintext',
+    editorType: 'text_content',
     text: [
       {
         type: 'title',
@@ -210,7 +212,7 @@ const DUMMY_PEMBUKAAN: Pembukaan = {
     ],
   },
   doa: {
-    editorType: 'plaintext',
+    editorType: 'text_content',
     text: [
       {
         type: 'paragraph',
@@ -283,7 +285,7 @@ const DUMMY_PEMBUKAAN: Pembukaan = {
     ],
   },
   mengingat: {
-    editorType: 'plaintext',
+    editorType: 'text_content',
     text: [
       {
         type: 'paragraph',
@@ -303,7 +305,7 @@ const DUMMY_PEMBUKAAN: Pembukaan = {
     ],
   },
   setuju: {
-    editorType: 'plaintext',
+    editorType: 'text_content',
     text: [
       {
         type: 'paragraph',
@@ -340,7 +342,7 @@ const DUMMY_PEMBUKAAN: Pembukaan = {
     ],
   },
   memutuskan: {
-    editorType: 'plaintext',
+    editorType: 'text_content',
     text: [
       {
         type: 'paragraph',
@@ -388,6 +390,8 @@ const SmartdocProvider = ({ children }: { children: React.ReactNode }) => {
       text: [],
     };
   }, [activePosition]);
+
+  console.log('selectedBlock ==> ', selectedBlock);
 
   return (
     <SmartdocContext.Provider

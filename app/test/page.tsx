@@ -40,6 +40,7 @@ export default function Page() {
 function Component() {
   const {
     badan,
+    setBadan,
     activePosition,
     setActivePosition,
     hoverPosition,
@@ -121,7 +122,7 @@ function Component() {
     return (
       <fieldset
         className={`
-          border cursor-pointer
+          relative border cursor-pointer
           ${activePosition === text.id || hoverPosition === text.id ? 'border-blue-400' : 'border-transparent'}
         `}
         onClick={(e) => {
@@ -151,6 +152,8 @@ function Component() {
 
         {text?.alphabet ? renderAlphabet(text.alphabet) : null}
         {text?.bullet ? renderBullet(text.bullet) : null}
+
+        {/* {activePosition === text.id && <Add elementType={elementType} />} */}
       </fieldset>
     );
   };
@@ -159,7 +162,7 @@ function Component() {
     return (
       <fieldset
         className={`
-          border p-2 cursor-pointer
+          relative border p-2 cursor-pointer
           ${activePosition === alphabet.id || hoverPosition === alphabet.id ? 'border-blue-400' : 'border-transparent'}
         `}
         onClick={(e) => {
@@ -182,6 +185,8 @@ function Component() {
             // );
           })}
         </ol>
+
+        {activePosition === alphabet.id && <Add elementType="alphabet" />}
       </fieldset>
     );
   };
@@ -190,7 +195,7 @@ function Component() {
     return (
       <fieldset
         className={`
-          border p-2 cursor-pointer
+          relative border p-2 cursor-pointer
           ${activePosition === bullet.id || hoverPosition === bullet.id ? 'border-blue-400' : 'border-transparent'}
         `}
         onClick={(e) => {
@@ -208,6 +213,8 @@ function Component() {
             return renderTextContent(bulletItem, 'bullet');
           })}
         </ul>
+
+        {activePosition === bullet.id && <Add elementType="bullet" />}
       </fieldset>
     );
   };
@@ -216,7 +223,7 @@ function Component() {
     return (
       <fieldset
         className={`
-          border p-2 cursor-pointer
+          relative border p-2 cursor-pointer
           ${activePosition === numbering.id || hoverPosition === numbering.id ? 'border-blue-400' : 'border-transparent'}
         `}
         onClick={(e) => {
@@ -243,6 +250,8 @@ function Component() {
             // );
           })}
         </ol>
+
+        {activePosition === numbering.id && <Add elementType="numbering" />}
       </fieldset>
     );
   };
@@ -251,7 +260,7 @@ function Component() {
     return (
       <fieldset
         className={`
-          border cursor-pointer
+          relative border cursor-pointer
           ${activePosition === ayat.id || hoverPosition === ayat.id ? 'border-blue-400' : 'border-transparent'}
         `}
         onClick={(e) => {
@@ -297,6 +306,8 @@ function Component() {
             return null;
           })}
         </div>
+
+        {activePosition === ayat.id && <Add elementType="ayat" />}
       </fieldset>
     );
   };
@@ -305,7 +316,7 @@ function Component() {
     return (
       <fieldset
         className={`
-          border p-1 cursor-pointer
+          relative border p-1 cursor-pointer
           ${activePosition === pasal.id || hoverPosition === pasal.id ? 'border-blue-400' : 'border-transparent'}
         `}
         onClick={(e) => {
@@ -342,6 +353,8 @@ function Component() {
           }
           return null;
         })}
+
+        {activePosition === pasal.id && <Add elementType="pasal" />}
       </fieldset>
     );
   };
@@ -350,7 +363,7 @@ function Component() {
     return (
       <fieldset
         className={`
-          border p-1 cursor-pointer
+          relative border p-1 cursor-pointer
           ${activePosition === paragraf.id || hoverPosition === paragraf.id ? 'border-blue-400' : 'border-transparent'}
         `}
         onClick={(e) => {
@@ -378,6 +391,8 @@ function Component() {
           }
           return null;
         })}
+
+        {activePosition === paragraf.id && <Add elementType="paragraf" />}
       </fieldset>
     );
   };
@@ -386,7 +401,7 @@ function Component() {
     return (
       <fieldset
         className={`
-          border p-1 cursor-pointer
+          relative border p-1 cursor-pointer
           ${activePosition === bagian.id || hoverPosition === bagian.id ? 'border-blue-400' : 'border-transparent'}
         `}
         onClick={(e) => {
@@ -417,6 +432,8 @@ function Component() {
           }
           return null;
         })}
+
+        {activePosition === bagian.id && <Add elementType="bagian" />}
       </fieldset>
     );
   };
@@ -429,7 +446,7 @@ function Component() {
       <fieldset
         key={index}
         className={`
-          border p-1 cursor-pointer
+          relative border p-1 cursor-pointer
           ${activePosition === item.id || hoverPosition === item.id ? 'border-blue-400' : 'border-transparent'}
         `}
         onClick={(e) => {
@@ -477,6 +494,8 @@ function Component() {
           }
           return null;
         })}
+
+        {activePosition === item.id && <Add elementType={item.type} />}
       </fieldset>
     );
   };
@@ -485,7 +504,7 @@ function Component() {
     <div ref={parentRef} className="mt-8 mx-auto w-[712px]">
       <fieldset
         className={`
-          border p-1 cursor-pointer
+          relative border p-1 cursor-pointer
           ${activePosition === 'badan' || hoverPosition === 'badan' ? 'border-blue-400' : 'border-transparent'}
         `}
         onClick={(e) => {
@@ -502,6 +521,8 @@ function Component() {
         {badan?.map((itemBadan, indexBadan) =>
           renderBadan(itemBadan, indexBadan)
         )}
+
+        {activePosition === 'badan' && <Add elementType="badan" />}
       </fieldset>
       {/* <fieldset
           className={`

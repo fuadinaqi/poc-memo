@@ -435,7 +435,9 @@ export default function Page() {
             ))}
           </fieldset>
           {activePosition === 'doa' && <Toolbar editor={editor} />}
-          {activePosition === 'doa' && <Add onClick={onAddNumbering} />}
+          {activePosition === 'doa' && (
+            <Add elementType="numbering" onClick={onAddNumbering} />
+          )}
         </div>
         {/* END DOA */}
       </fieldset>
