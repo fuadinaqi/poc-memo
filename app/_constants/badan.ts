@@ -375,15 +375,15 @@ export const DUMMY_BADAN: Badan = [
     ],
     list: [
       {
-        type: 'paragraf',
-        id: 'bab2-par1',
-        title: 'Paragraf 1',
+        type: 'bagian',
+        id: 'bab2-bag1',
+        title: 'Bagian Kesatu',
         text: [
           {
-            type: 'paragraph',
+            type: 'title',
             children: [
               {
-                text: 'Perusahaan Terbuka',
+                text: 'Pendirian Perseroan Terbatas',
                 bold: true,
               },
             ],
@@ -391,37 +391,70 @@ export const DUMMY_BADAN: Badan = [
         ],
         list: [
           {
-            type: 'pasal',
-            id: 'bab2-par1-pas1',
-            title: 'Pasal 4',
+            type: 'paragraf',
+            id: 'bab2-bag1-par1',
+            title: 'Paragraf 1',
             text: [
               {
                 type: 'paragraph',
                 children: [
                   {
-                    text: 'Dalam Undang-Undang ini yang dimaksud dengan:',
+                    text: 'Perusahaan Terbuka',
+                    bold: true,
                   },
                 ],
               },
             ],
             list: [
               {
-                type: 'ayat',
-                id: 'bab2-par1-pas1-ayat1',
+                type: 'pasal',
+                id: 'bab2-bag1-par1-pas1',
+                title: 'Pasal 4',
                 text: [
                   {
                     type: 'paragraph',
                     children: [
                       {
-                        text: 'Perusahaan Terbuka adalah perseroan terbatas yang saham-sahamnya diperdagangkan di bursa efek.',
+                        text: 'Dalam Undang-Undang ini yang dimaksud dengan:',
+                      },
+                    ],
+                  },
+                ],
+                list: [
+                  {
+                    type: 'ayat',
+                    id: 'bab2-bag1-par1-pas1-ayat1',
+                    text: [
+                      {
+                        type: 'paragraph',
+                        children: [
+                          {
+                            text: 'Perusahaan Terbuka adalah perseroan terbatas yang saham-sahamnya diperdagangkan di bursa efek.',
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                  {
+                    type: 'ayat',
+                    id: 'bab2-bag1-par1-pas1-ayat2',
+                    text: [
+                      {
+                        type: 'paragraph',
+                        children: [
+                          {
+                            text: 'Perusahaan Terbuka wajib menyampaikan laporan keuangan tahunan dan laporan tahunan kegiatan usaha kepada pemegang saham.',
+                          },
+                        ],
                       },
                     ],
                   },
                 ],
               },
               {
-                type: 'ayat',
-                id: 'bab2-par1-pas1-ayat2',
+                type: 'pasal',
+                id: 'bab2-bag1-par1-pas2',
+                title: 'Pasal 5',
                 text: [
                   {
                     type: 'paragraph',
@@ -436,76 +469,61 @@ export const DUMMY_BADAN: Badan = [
             ],
           },
           {
-            type: 'pasal',
-            id: 'bab2-par1-pas2',
-            title: 'Pasal 5',
+            type: 'paragraf',
+            id: 'bab2-par2',
+            title: 'Paragraf 2',
             text: [
               {
                 type: 'paragraph',
                 children: [
                   {
-                    text: 'Perusahaan Terbuka wajib menyampaikan laporan keuangan tahunan dan laporan tahunan kegiatan usaha kepada pemegang saham.',
+                    text: 'Pencatatan Saham',
+                    bold: true,
                   },
                 ],
               },
             ],
-          },
-        ],
-      },
-      {
-        type: 'paragraf',
-        id: 'bab2-par2',
-        title: 'Paragraf 2',
-        text: [
-          {
-            type: 'paragraph',
-            children: [
-              {
-                text: 'Pencatatan Saham',
-                bold: true,
-              },
-            ],
-          },
-        ],
-        list: [
-          {
-            type: 'pasal',
-            id: 'bab2-par2-pas1',
-            title: 'Pasal 6',
-            // text: [
-            //   {
-            //     type: 'paragraph',
-            //     children: [
-            //       {
-            //         text: 'Pencatatan saham Perusahaan Terbuka dilakukan oleh Bursa Efek.',
-            //       },
-            //     ],
-            //   },
-            // ],
             list: [
               {
-                type: 'ayat',
-                id: 'bab2-par2-pas1-ayat1',
-                text: [
+                type: 'pasal',
+                id: 'bab2-par2-pas1',
+                title: 'Pasal 6',
+                // text: [
+                //   {
+                //     type: 'paragraph',
+                //     children: [
+                //       {
+                //         text: 'Pencatatan saham Perusahaan Terbuka dilakukan oleh Bursa Efek.',
+                //       },
+                //     ],
+                //   },
+                // ],
+                list: [
                   {
-                    type: 'paragraph',
-                    children: [
+                    type: 'ayat',
+                    id: 'bab2-par2-pas1-ayat1',
+                    text: [
                       {
-                        text: 'Pencatatan saham Perusahaan Terbuka dilakukan oleh Bursa Efek.',
+                        type: 'paragraph',
+                        children: [
+                          {
+                            text: 'Pencatatan saham Perusahaan Terbuka dilakukan oleh Bursa Efek.',
+                          },
+                        ],
                       },
                     ],
                   },
-                ],
-              },
-              {
-                type: 'ayat',
-                id: 'bab2-par2-pas1-ayat2',
-                text: [
                   {
-                    type: 'paragraph',
-                    children: [
+                    type: 'ayat',
+                    id: 'bab2-par2-pas1-ayat2',
+                    text: [
                       {
-                        text: 'Pencatatan saham Perusahaan Terbuka dilakukan oleh Bursa Efek.',
+                        type: 'paragraph',
+                        children: [
+                          {
+                            text: 'Pencatatan saham Perusahaan Terbuka dilakukan oleh Bursa Efek.',
+                          },
+                        ],
                       },
                     ],
                   },

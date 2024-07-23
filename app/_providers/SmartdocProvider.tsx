@@ -148,7 +148,7 @@ export type Bab = {
   type: 'bab';
   title: string;
   text: CustomElement[];
-  list?: Array<Bagian | Paragraf | Pasal>;
+  list?: Array<Bagian | Pasal>;
 };
 
 export type Badan = Array<Bab | Bagian | Paragraf | Pasal>;
