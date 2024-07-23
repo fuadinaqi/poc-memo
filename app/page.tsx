@@ -1,8 +1,8 @@
-'use client';
+// 'use client';
 
-export default function Page() {
-  return <div>Index</div>;
-}
+// export default function Page() {
+//   return <div>Index</div>;
+// }
 // 'use client';
 
 // import { useCallback, useEffect, useRef, useState } from 'react';

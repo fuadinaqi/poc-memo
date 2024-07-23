@@ -462,6 +462,24 @@ function Component() {
           {item.title}
         </legend>
 
+        {/* {activePosition === item.id ? (
+          <SmartdocEditor
+            elementType={item.type}
+            initialValue={item.text ?? []}
+            onChange={(value) => {
+              console.log(value);
+            }}
+          />
+        ) : (
+          <h1 className="cursor-text text-center">
+            {item.text?.map((textItem, indexItem) => {
+              return textItem.children.map((text, i) => {
+                return <SmartdocViewText key={i} text={text} />;
+              });
+            })}
+          </h1>
+        )} */}
+
         <h1 className="cursor-text text-center">
           {item.text?.map((textItem, indexItem) => {
             return textItem.children.map((text, i) => {
