@@ -392,7 +392,7 @@ const SmartdocProvider = ({ children }: { children: React.ReactNode }) => {
       type: 'text_content',
       text: [],
     };
-  }, [activePosition]);
+  }, [activePosition, badan]);
 
   // console.log('selectedBlock ==> ', selectedBlock);
 

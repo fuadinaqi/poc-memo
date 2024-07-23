@@ -71,6 +71,8 @@ function Component() {
 
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => {
     const handleMouseOver = (e: MouseEvent) => {
@@ -81,6 +83,8 @@ function Component() {
 
     document.addEventListener('mouseover', handleMouseOver);
     return () => document.removeEventListener('mouseover', handleMouseOver);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // useEffect(() => {
@@ -280,7 +284,7 @@ function Component() {
         <ul className="list-disc list-inside">
           {bullet?.list?.map((bulletItem, bulletIndex) => {
             return (
-              <li className="flex">
+              <li className="flex" key={`${bulletItem.id}-${bulletIndex}`}>
                 <span className="cursor-text w-6">&bull;&nbsp;</span>
                 {renderTextContent(bulletItem, 'bullet')}
               </li>
@@ -313,7 +317,10 @@ function Component() {
         <ol className="list-decimal list-inside">
           {numbering?.list?.map((numberingItem, numberingIndex) => {
             return (
-              <li className="flex">
+              <li
+                className="flex"
+                key={`${numberingItem.id}-${numberingIndex}`}
+              >
                 <span className="cursor-text w-6">
                   {numberingIndex + 1}.&nbsp;
                 </span>
