@@ -1,5 +1,8 @@
-import { SmartdocEditorType } from '@/app/_providers/SmartdocProvider';
-import { CustomText } from '@/app/page';
+import {
+  CustomText,
+  SmartdocEditorType,
+} from '@/app/_providers/SmartdocProvider';
+// import { CustomText } from '@/app/page';
 
 export const SmartdocViewText = (props: {
   text: CustomText;

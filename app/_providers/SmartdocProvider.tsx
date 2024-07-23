@@ -3,7 +3,10 @@ import { BaseEditor } from 'slate';
 import { ReactEditor } from 'slate-react';
 import { DUMMY_BADAN } from '../_constants/badan';
 
-type CustomElement = { type: 'paragraph' | 'title'; children: CustomText[] };
+export type CustomElement = {
+  type: 'paragraph' | 'title';
+  children: CustomText[];
+};
 export type CustomText = {
   text: string;
   bold?: boolean;

@@ -1,4 +1,4 @@
-import { CustomText } from '@/app/page';
+// import { CustomText } from '@/app/page';
 import SmartdocEditor from '../editor';
 import { SmartdocViewText } from '../view';
 

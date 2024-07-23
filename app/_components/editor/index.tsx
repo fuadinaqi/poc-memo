@@ -1,8 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { createEditor, Transforms } from 'slate';
-import { BaseEditor, Descendant, Node } from 'slate';
+import { createEditor, Descendant, Transforms } from 'slate';
+import { BaseEditor, Node } from 'slate';
 import {
   ReactEditor,
   Slate,
@@ -14,6 +14,10 @@ import {
 
 import Toolbar, { CustomEditor } from '../toolbar';
 import Add from '../add';
+import {
+  CustomElement,
+  SmartdocEditorType,
+} from '@/app/_providers/SmartdocProvider';
 
 const TitleElement = (props: RenderElementProps) => {
   return (
@@ -43,7 +47,8 @@ const Leaf = (props: RenderLeafProps) => {
 };
 
 export default function SmartdocEditor(props: {
-  initialValue: Descendant[];
+  elementType: SmartdocEditorType;
+  initialValue: CustomElement[];
   onChange: (value: Descendant[]) => void;
 }) {
   const { initialValue, onChange } = props;
