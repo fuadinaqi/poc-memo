@@ -247,8 +247,8 @@ function Component() {
           {alphabet?.list?.map((alphabetItem, alphabetIndex) => {
             // return renderTextContent(alphabetItem, 'alphabet', alphabetIndex);
             return (
-              <li key={alphabetIndex} className="flex gap-1.5">
-                <span className="cursor-text">{`${String.fromCharCode(96 + alphabetIndex + 1)}. `}</span>
+              <li key={alphabetIndex} className="flex">
+                <span className="cursor-text w-6">{`${String.fromCharCode(96 + alphabetIndex + 1)}. `}</span>
                 {renderTextContent(alphabetItem, 'alphabet', alphabetIndex)}
               </li>
             );
@@ -280,8 +280,8 @@ function Component() {
         <ul className="list-disc list-inside">
           {bullet?.list?.map((bulletItem, bulletIndex) => {
             return (
-              <li className="flex gap-1.5">
-                <span className="cursor-text">&bull;&nbsp;</span>
+              <li className="flex">
+                <span className="cursor-text w-6">&bull;&nbsp;</span>
                 {renderTextContent(bulletItem, 'bullet')}
               </li>
             );
@@ -313,8 +313,10 @@ function Component() {
         <ol className="list-decimal list-inside">
           {numbering?.list?.map((numberingItem, numberingIndex) => {
             return (
-              <li className="flex gap-1.5">
-                <span className="cursor-text">{numberingIndex + 1}.&nbsp;</span>
+              <li className="flex">
+                <span className="cursor-text w-6">
+                  {numberingIndex + 1}.&nbsp;
+                </span>
                 {renderTextContent(numberingItem, 'numbering', numberingIndex)}
               </li>
             );
