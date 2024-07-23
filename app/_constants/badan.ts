@@ -80,11 +80,11 @@ export const DUMMY_BADAN: Badan = [
                     list: [
                       {
                         type: 'bullet',
-                        id: 'bab1-bag1-par1-pas1-ayat1-bullet',
+                        id: 'bab1-bag1-par1-pas1-ayat1-bullet1',
                         list: [
                           {
                             type: 'text_content',
-                            id: 'bab1-bag1-par1-pas1-ayat1-bullet1',
+                            id: 'bab1-bag1-par1-pas1-ayat1-bullet1-1',
                             text: [
                               {
                                 type: 'paragraph',
@@ -98,7 +98,7 @@ export const DUMMY_BADAN: Badan = [
                           },
                           {
                             type: 'text_content',
-                            id: 'bab1-bag1-par1-pas1-ayat1-bullet2',
+                            id: 'bab1-bag1-par1-pas1-ayat1-bullet1-2',
                             text: [
                               {
                                 type: 'paragraph',
@@ -144,11 +144,11 @@ export const DUMMY_BADAN: Badan = [
                     list: [
                       {
                         type: 'numbering',
-                        id: 'bab1-bag1-par1-pas1-ayat3-numbering',
+                        id: 'bab1-bag1-par1-pas1-ayat3-numbering1',
                         list: [
                           {
                             type: 'text_content',
-                            id: 'bab1-bag1-par1-pas1-ayat3-numbering1',
+                            id: 'bab1-bag1-par1-pas1-ayat3-numbering1-1',
                             text: [
                               {
                                 type: 'paragraph',
@@ -162,7 +162,7 @@ export const DUMMY_BADAN: Badan = [
                           },
                           {
                             type: 'text_content',
-                            id: 'bab1-bag1-par1-pas1-ayat3-numbering2',
+                            id: 'bab1-bag1-par1-pas1-ayat3-numbering1-2',
                             text: [
                               {
                                 type: 'paragraph',
@@ -194,11 +194,11 @@ export const DUMMY_BADAN: Badan = [
                     list: [
                       {
                         type: 'alphabet',
-                        id: 'bab1-bag1-par1-pas1-ayat4-alphabet',
+                        id: 'bab1-bag1-par1-pas1-ayat4-alphabet1',
                         list: [
                           {
                             type: 'text_content',
-                            id: 'bab1-bag1-par1-pas1-ayat4-alphabet1',
+                            id: 'bab1-bag1-par1-pas1-ayat4-alphabet1-1',
                             text: [
                               {
                                 type: 'paragraph',
@@ -212,7 +212,7 @@ export const DUMMY_BADAN: Badan = [
                           },
                           {
                             type: 'text_content',
-                            id: 'bab1-bag1-par1-pas1-ayat4-alphabet2',
+                            id: 'bab1-bag1-par1-pas1-ayat4-alphabet1-2',
                             text: [
                               {
                                 type: 'paragraph',

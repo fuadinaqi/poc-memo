@@ -126,11 +126,7 @@ export default function Add(props: {
   };
 
   const renderButtonAddParagraf = () => {
-    if (
-      elementType === 'bagian' ||
-      elementType === 'bab' ||
-      elementType === 'badan'
-    ) {
+    if (elementType === 'bagian' || elementType === 'badan') {
       return (
         <button
           className="p-1 border flex items-center justify-center bg-teal-700 text-white border-black cursor-pointer"
