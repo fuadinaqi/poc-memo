@@ -21,6 +21,7 @@ import SmartdocProvider, {
   Bab,
   Bagian,
   Bullet,
+  CustomElement,
   Numbering,
   Paragraf,
   Pasal,
@@ -28,6 +29,10 @@ import SmartdocProvider, {
   TextContent,
   useSmartdocContext,
 } from '../_providers/SmartdocProvider';
+
+function deepCopy(obj: any) {
+  return JSON.parse(JSON.stringify(obj));
+}
 
 export default function Page() {
   return (
@@ -114,6 +119,54 @@ function Component() {
   //   }, 500);
   // };
 
+  const onChange = ({
+    id,
+    value,
+    elementType,
+  }: {
+    id: string;
+    elementType?: SmartdocEditorType;
+    value: CustomElement[];
+  }) => {
+    setBadan((prevBadan) => {
+      const newBadan = deepCopy(prevBadan);
+
+      const findElement = (arr: any[], id: string): any => {
+        for (let i = 0; i < arr.length; i++) {
+          if (arr[i].id === id) {
+            return arr[i];
+          }
+          if (arr[i].list) {
+            const found = findElement(arr[i].list, id);
+            if (found) {
+              return found;
+            }
+          }
+        }
+        return null;
+      };
+
+      const element = findElement(newBadan, id);
+      const parentElement = findElement(
+        newBadan,
+        id?.split('-')?.slice(0, -1).join('-')
+      );
+      const isDeletedValue =
+        value.length === 1 &&
+        value[0].children.length === 1 &&
+        value[0].children[0].text === '';
+      if (isDeletedValue) {
+        parentElement.list = parentElement.list.filter(
+          (item: any) => item.id !== id
+        );
+      } else {
+        element.text = value;
+      }
+
+      return newBadan;
+    });
+  };
+
   const renderTextContent = (
     text: TextContent,
     elementType: SmartdocEditorType,
@@ -135,25 +188,40 @@ function Component() {
         }}
       >
         {/* <legend className="ps-1 pe-1">TextContent</legend> */}
-        <p className="cursor-text">
-          {text?.text?.map((textItem) => {
-            return textItem.children.map((text, i) => {
-              return (
-                <SmartdocViewText
-                  key={i}
-                  text={text}
-                  elementType={elementType}
-                  index={typeof index === 'number' ? index + 1 : undefined}
-                />
-              );
-            });
-          })}
-        </p>
+
+        {activePosition === text.id ? (
+          <SmartdocEditor
+            elementType={elementType}
+            initialValue={text.text ?? []}
+            onChange={(v) => {
+              const value: CustomElement[] = v as CustomElement[];
+
+              onChange({
+                id: text.id,
+                elementType,
+                value,
+              });
+            }}
+          />
+        ) : (
+          <p className="cursor-text">
+            {text?.text?.map((textItem) => {
+              return textItem.children.map((text, i) => {
+                return (
+                  <SmartdocViewText
+                    key={i}
+                    text={text}
+                    elementType={elementType}
+                    index={typeof index === 'number' ? index + 1 : undefined}
+                  />
+                );
+              });
+            })}
+          </p>
+        )}
 
         {text?.alphabet ? renderAlphabet(text.alphabet) : null}
         {text?.bullet ? renderBullet(text.bullet) : null}
-
-        {/* {activePosition === text.id && <Add elementType={elementType} />} */}
       </fieldset>
     );
   };
@@ -274,23 +342,42 @@ function Component() {
       >
         {/* <legend className="ps-1 pe-1 text-center">Ayat - {ayat.id}</legend> */}
 
-        <div className="flex gap-1.5">
-          <span className="cursor-text text-center">({index + 1})&nbsp;</span>
-          <p className="cursor-text">
-            {ayat?.text?.map((ayatItem, indexItem) => {
-              return ayatItem.children.map((text, i) => {
-                return (
-                  <SmartdocViewText
-                    key={i}
-                    text={text}
-                    elementType="ayat"
-                    // index={index + 1}
-                  />
-                );
-              });
-            })}
-          </p>
-        </div>
+        {activePosition === ayat.id ? (
+          <div className="flex gap-1.5">
+            <span className="cursor-text text-center">({index + 1})&nbsp;</span>
+            <SmartdocEditor
+              elementType={ayat.type}
+              initialValue={ayat.text ?? []}
+              onChange={(v) => {
+                const value: CustomElement[] = v as CustomElement[];
+
+                onChange({
+                  id: ayat.id,
+                  elementType: ayat.type,
+                  value,
+                });
+              }}
+            />
+          </div>
+        ) : (
+          <div className="flex gap-1.5">
+            <span className="cursor-text text-center">({index + 1})&nbsp;</span>
+            <p className="cursor-text">
+              {ayat?.text?.map((ayatItem, indexItem) => {
+                return ayatItem.children.map((text, i) => {
+                  return (
+                    <SmartdocViewText
+                      key={i}
+                      text={text}
+                      elementType="ayat"
+                      // index={index + 1}
+                    />
+                  );
+                });
+              })}
+            </p>
+          </div>
+        )}
 
         <div className="ml-8">
           {ayat?.list?.map((itemAyat, i) => {
@@ -330,13 +417,29 @@ function Component() {
       >
         <legend className="ps-1 pe-1 text-center">{pasal.title}</legend>
 
-        <p className="cursor-text">
-          {pasal.text?.map((textItem, indexItem) => {
-            return textItem.children.map((text, i) => {
-              return <SmartdocViewText key={i} text={text} />;
-            });
-          })}
-        </p>
+        {activePosition === pasal.id ? (
+          <SmartdocEditor
+            elementType={pasal.type}
+            initialValue={pasal.text ?? []}
+            onChange={(v) => {
+              const value: CustomElement[] = v as CustomElement[];
+
+              onChange({
+                id: pasal.id,
+                elementType: pasal.type,
+                value,
+              });
+            }}
+          />
+        ) : (
+          <h4 className="cursor-text">
+            {pasal.text?.map((textItem, indexItem) => {
+              return textItem.children.map((text, i) => {
+                return <SmartdocViewText key={i} text={text} />;
+              });
+            })}
+          </h4>
+        )}
 
         {pasal?.list?.map((itemPasal, i) => {
           if (itemPasal.type === 'ayat') {
@@ -377,13 +480,29 @@ function Component() {
       >
         <legend className="ps-1 pe-1 text-center">{paragraf.title}</legend>
 
-        <p className="cursor-text text-center">
-          {paragraf.text?.map((textItem, indexItem) => {
-            return textItem.children.map((text, i) => {
-              return <SmartdocViewText key={i} text={text} />;
-            });
-          })}
-        </p>
+        {activePosition === paragraf.id ? (
+          <SmartdocEditor
+            elementType={paragraf.type}
+            initialValue={paragraf.text ?? []}
+            onChange={(v) => {
+              const value: CustomElement[] = v as CustomElement[];
+
+              onChange({
+                id: paragraf.id,
+                elementType: paragraf.type,
+                value,
+              });
+            }}
+          />
+        ) : (
+          <h3 className="cursor-text text-center">
+            {paragraf.text?.map((textItem, indexItem) => {
+              return textItem.children.map((text, i) => {
+                return <SmartdocViewText key={i} text={text} />;
+              });
+            })}
+          </h3>
+        )}
 
         {paragraf?.list?.map((itemParagraf, indexParagraf) => {
           if (itemParagraf.type === 'pasal') {
@@ -415,13 +534,29 @@ function Component() {
       >
         <legend className="ps-1 pe-1 text-center">{bagian.title}</legend>
 
-        <h2 className="cursor-text text-center">
-          {bagian.text?.map((textItem, indexItem) => {
-            return textItem.children.map((text, i) => {
-              return <SmartdocViewText key={i} text={text} />;
-            });
-          })}
-        </h2>
+        {activePosition === bagian.id ? (
+          <SmartdocEditor
+            elementType={bagian.type}
+            initialValue={bagian.text ?? []}
+            onChange={(v) => {
+              const value: CustomElement[] = v as CustomElement[];
+
+              onChange({
+                id: bagian.id,
+                elementType: bagian.type,
+                value,
+              });
+            }}
+          />
+        ) : (
+          <h2 className="cursor-text text-center">
+            {bagian.text?.map((textItem, indexItem) => {
+              return textItem.children.map((text, i) => {
+                return <SmartdocViewText key={i} text={text} />;
+              });
+            })}
+          </h2>
+        )}
 
         {bagian?.list?.map((itemBagian, indexBagian) => {
           if (itemBagian.type === 'pasal') {
@@ -462,12 +597,18 @@ function Component() {
           {item.title}
         </legend>
 
-        {/* {activePosition === item.id ? (
+        {activePosition === item.id ? (
           <SmartdocEditor
             elementType={item.type}
             initialValue={item.text ?? []}
-            onChange={(value) => {
-              console.log(value);
+            onChange={(v) => {
+              const value: CustomElement[] = v as CustomElement[];
+
+              onChange({
+                id: item.id,
+                elementType: item.type,
+                value,
+              });
             }}
           />
         ) : (
@@ -478,15 +619,7 @@ function Component() {
               });
             })}
           </h1>
-        )} */}
-
-        <h1 className="cursor-text text-center">
-          {item.text?.map((textItem, indexItem) => {
-            return textItem.children.map((text, i) => {
-              return <SmartdocViewText key={i} text={text} />;
-            });
-          })}
-        </h1>
+        )}
 
         {item?.list?.map((itemBadan, i) => {
           if (itemBadan.type === 'bagian') {

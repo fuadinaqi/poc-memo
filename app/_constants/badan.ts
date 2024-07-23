@@ -23,7 +23,7 @@ export const DUMMY_BADAN: Badan = [
         title: 'Bagian Kesatu',
         text: [
           {
-            type: 'paragraph',
+            type: 'title',
             children: [
               {
                 text: 'Anggaran Dasar dan Perubahan Anggaran Dasar',
@@ -39,7 +39,7 @@ export const DUMMY_BADAN: Badan = [
             title: 'Paragraf 1',
             text: [
               {
-                type: 'paragraph',
+                type: 'title',
                 children: [
                   {
                     text: 'Anggaran Dasar',
@@ -262,7 +262,7 @@ export const DUMMY_BADAN: Badan = [
         title: 'Bagian Kedua',
         text: [
           {
-            type: 'paragraph',
+            type: 'title',
             children: [
               {
                 text: 'Pendirian Perseroan Terbatas',
@@ -278,7 +278,7 @@ export const DUMMY_BADAN: Badan = [
             title: 'Paragraf 1',
             text: [
               {
-                type: 'paragraph',
+                type: 'title',
                 children: [
                   {
                     text: 'Perseroan Terbatas didirikan oleh dua orang atau lebih dengan membuat Anggaran Dasar yang dibuat dalam akta notaris.',
@@ -327,7 +327,7 @@ export const DUMMY_BADAN: Badan = [
             title: 'Paragraf 2',
             text: [
               {
-                type: 'paragraph',
+                type: 'title',
                 children: [
                   {
                     text: 'Perseroan Terbatas yang didirikan oleh dua orang atau lebih dengan membuat Anggaran Dasar yang dibuat dalam akta notaris.',
@@ -396,7 +396,7 @@ export const DUMMY_BADAN: Badan = [
             title: 'Paragraf 1',
             text: [
               {
-                type: 'paragraph',
+                type: 'title',
                 children: [
                   {
                     text: 'Perusahaan Terbuka',
@@ -474,7 +474,7 @@ export const DUMMY_BADAN: Badan = [
             title: 'Paragraf 2',
             text: [
               {
-                type: 'paragraph',
+                type: 'title',
                 children: [
                   {
                     text: 'Pencatatan Saham',

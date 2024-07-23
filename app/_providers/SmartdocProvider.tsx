@@ -394,7 +394,7 @@ const SmartdocProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, [activePosition]);
 
-  console.log('selectedBlock ==> ', selectedBlock);
+  // console.log('selectedBlock ==> ', selectedBlock);
 
   return (
     <SmartdocContext.Provider

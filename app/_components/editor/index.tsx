@@ -18,6 +18,7 @@ import {
   CustomElement,
   SmartdocEditorType,
 } from '@/app/_providers/SmartdocProvider';
+import { withHistory } from 'slate-history';
 
 const TitleElement = (props: RenderElementProps) => {
   return (
@@ -52,7 +53,7 @@ export default function SmartdocEditor(props: {
   onChange: (value: Descendant[]) => void;
 }) {
   const { initialValue, onChange } = props;
-  const [editor] = useState(() => withReact(createEditor()));
+  const [editor] = useState(() => withReact(withHistory(createEditor())));
 
   const renderElement = useCallback((props: RenderElementProps) => {
     switch (props.element.type) {
@@ -69,41 +70,52 @@ export default function SmartdocEditor(props: {
     return <Leaf {...props} />;
   }, []);
 
+  useEffect(() => {
+    Transforms.select(editor, {
+      offset: 0,
+      path: [0, 0],
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
-    <Slate editor={editor} initialValue={initialValue} onChange={onChange}>
-      <Editable
-        className={`
-          w-full h-full m-0 p-0 focus:outline-none cursor-text text-center
-        `}
-        renderElement={renderElement}
-        renderLeaf={renderLeaf}
-        autoFocus
-        onKeyDown={(event) => {
-          if (!event.ctrlKey && !event.metaKey) {
-            return;
-          }
-
-          switch (event.key) {
-            case 'b': {
-              event.preventDefault();
-              CustomEditor.toggleBoldMark(editor);
-              break;
+    <div className="relative">
+      <Slate editor={editor} initialValue={initialValue} onChange={onChange}>
+        <Editable
+          className={`
+            w-full h-full m-0 p-0 focus:outline-none cursor-text
+          `}
+          renderElement={renderElement}
+          renderLeaf={renderLeaf}
+          autoFocus
+          onKeyDown={(event) => {
+            if (!event.ctrlKey && !event.metaKey) {
+              return;
             }
 
-            case 'i': {
-              event.preventDefault();
-              CustomEditor.toggleItalicMark(editor);
-              break;
-            }
+            switch (event.key) {
+              case 'b': {
+                event.preventDefault();
+                CustomEditor.toggleBoldMark(editor);
+                break;
+              }
 
-            case 'u': {
-              event.preventDefault();
-              CustomEditor.toggleUnderlineMark(editor);
-              break;
+              case 'i': {
+                event.preventDefault();
+                CustomEditor.toggleItalicMark(editor);
+                break;
+              }
+
+              case 'u': {
+                event.preventDefault();
+                CustomEditor.toggleUnderlineMark(editor);
+                break;
+              }
             }
-          }
-        }}
-      />
-    </Slate>
+          }}
+        />
+      </Slate>
+      <Toolbar elementType={props.elementType} editor={editor} />
+    </div>
   );
 }
