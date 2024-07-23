@@ -56,7 +56,10 @@ export default function Toolbar(props: {
     if (
       elementType === 'text_content' ||
       elementType === 'ayat' ||
-      elementType === 'pasal'
+      elementType === 'pasal' ||
+      elementType === 'numbering' ||
+      elementType === 'alphabet' ||
+      elementType === 'bullet'
     ) {
       return (
         <button
@@ -77,7 +80,10 @@ export default function Toolbar(props: {
     if (
       elementType === 'text_content' ||
       elementType === 'ayat' ||
-      elementType === 'pasal'
+      elementType === 'pasal' ||
+      elementType === 'numbering' ||
+      elementType === 'alphabet' ||
+      elementType === 'bullet'
     ) {
       return (
         <button
@@ -98,7 +104,10 @@ export default function Toolbar(props: {
     if (
       elementType === 'text_content' ||
       elementType === 'ayat' ||
-      elementType === 'pasal'
+      elementType === 'pasal' ||
+      elementType === 'numbering' ||
+      elementType === 'alphabet' ||
+      elementType === 'bullet'
     ) {
       return (
         <button

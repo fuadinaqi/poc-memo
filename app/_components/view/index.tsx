@@ -11,36 +11,36 @@ export const SmartdocViewText = (props: {
 }) => {
   const { index, text, elementType } = props;
 
-  const renderByElementType = () => {
-    switch (elementType) {
-      case 'bullet': {
-        return <span className="w-6 inline-block">&bull; </span>;
-      }
-      case 'numbering': {
-        if (typeof index === 'number') {
-          return <span className="w-6 inline-block">{`${index}. `}</span>;
-        }
-        return null;
-      }
-      case 'alphabet': {
-        if (typeof index === 'number') {
-          return (
-            <span className="w-6 inline-block">{`${String.fromCharCode(96 + index)}. `}</span>
-          );
-        }
-        return null;
-      }
-      case 'ayat': {
-        if (typeof index === 'number') {
-          return `(${index}) `;
-        }
-        return null;
-      }
-      default: {
-        return null;
-      }
-    }
-  };
+  // const renderByElementType = () => {
+  //   switch (elementType) {
+  //     case 'bullet': {
+  //       return <span className="w-6 inline-block">&bull; </span>;
+  //     }
+  //     case 'numbering': {
+  //       if (typeof index === 'number') {
+  //         return <span className="w-6 inline-block">{`${index}. `}</span>;
+  //       }
+  //       return null;
+  //     }
+  //     case 'alphabet': {
+  //       if (typeof index === 'number') {
+  //         return (
+  //           <span className="w-6 inline-block">{`${String.fromCharCode(96 + index)}. `}</span>
+  //         );
+  //       }
+  //       return null;
+  //     }
+  //     case 'ayat': {
+  //       if (typeof index === 'number') {
+  //         return `(${index}) `;
+  //       }
+  //       return null;
+  //     }
+  //     default: {
+  //       return null;
+  //     }
+  //   }
+  // };
 
   return (
     <span
@@ -50,7 +50,7 @@ export const SmartdocViewText = (props: {
         ${text.underline ? 'underline' : ''}
       `}
     >
-      {renderByElementType()}
+      {/* {renderByElementType()} */}
       {text.text}
     </span>
   );

@@ -245,12 +245,13 @@ function Component() {
         {/* <legend className="ps-1 pe-1">Alphabet</legend> */}
         <ol className="list-decimal list-inside">
           {alphabet?.list?.map((alphabetItem, alphabetIndex) => {
-            return renderTextContent(alphabetItem, 'alphabet', alphabetIndex);
-            // return (
-            //   <li key={alphabetIndex}>
-            //     {renderTextContent(alphabetItem, 'alphabet', alphabetIndex)}
-            //   </li>
-            // );
+            // return renderTextContent(alphabetItem, 'alphabet', alphabetIndex);
+            return (
+              <li key={alphabetIndex} className="flex gap-1.5">
+                <span className="cursor-text">{`${String.fromCharCode(96 + alphabetIndex + 1)}. `}</span>
+                {renderTextContent(alphabetItem, 'alphabet', alphabetIndex)}
+              </li>
+            );
           })}
         </ol>
 
@@ -278,7 +279,12 @@ function Component() {
         {/* <legend className="ps-1 pe-1">Bullet</legend> */}
         <ul className="list-disc list-inside">
           {bullet?.list?.map((bulletItem, bulletIndex) => {
-            return renderTextContent(bulletItem, 'bullet');
+            return (
+              <li className="flex gap-1.5">
+                <span className="cursor-text">&bull;&nbsp;</span>
+                {renderTextContent(bulletItem, 'bullet')}
+              </li>
+            );
           })}
         </ul>
 
@@ -306,10 +312,11 @@ function Component() {
         {/* <legend className="ps-1 pe-1">TextContent</legend> */}
         <ol className="list-decimal list-inside">
           {numbering?.list?.map((numberingItem, numberingIndex) => {
-            return renderTextContent(
-              numberingItem,
-              'numbering',
-              numberingIndex
+            return (
+              <li className="flex gap-1.5">
+                <span className="cursor-text">{numberingIndex + 1}.&nbsp;</span>
+                {renderTextContent(numberingItem, 'numbering', numberingIndex)}
+              </li>
             );
             // return (
             //   <li key={numberingIndex}>
