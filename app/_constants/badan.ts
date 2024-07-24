@@ -511,6 +511,22 @@ export const DUMMY_BADAN: Badan = [
                           },
                         ],
                       },
+                      {
+                        type: 'paragraph',
+                        children: [
+                          {
+                            text: '',
+                          },
+                        ],
+                      },
+                      {
+                        type: 'paragraph',
+                        children: [
+                          {
+                            text: 'Lorem ipsum fuadi',
+                          },
+                        ],
+                      },
                     ],
                   },
                   {

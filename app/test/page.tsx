@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { createEditor } from 'slate';
+import { createEditor, last } from 'slate';
 import { BaseEditor, Descendant, Node } from 'slate';
 import {
   ReactEditor,
@@ -29,10 +29,27 @@ import SmartdocProvider, {
   TextContent,
   useSmartdocContext,
 } from '../_providers/SmartdocProvider';
+import { numberToRoman, romanToNumber } from '../_utils/roman';
+import { numberToSentence, sentenceToNumber } from '../_utils/sentence';
 
 function deepCopy(obj: any) {
   return JSON.parse(JSON.stringify(obj));
 }
+
+const findElement = (arr: any[], id: string): any => {
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i].id === id) {
+      return arr[i];
+    }
+    if (arr[i].list) {
+      const found = findElement(arr[i].list, id);
+      if (found) {
+        return found;
+      }
+    }
+  }
+  return null;
+};
 
 export default function Page() {
   return (
@@ -50,6 +67,8 @@ function Component() {
     setActivePosition,
     hoverPosition,
     setHoverPosition,
+    getLastElement,
+    selectedBlock,
   } = useSmartdocContext();
 
   // const [hoverPosition, setHoverPosition] = useState<
@@ -135,20 +154,20 @@ function Component() {
     setBadan((prevBadan) => {
       const newBadan = deepCopy(prevBadan);
 
-      const findElement = (arr: any[], id: string): any => {
-        for (let i = 0; i < arr.length; i++) {
-          if (arr[i].id === id) {
-            return arr[i];
-          }
-          if (arr[i].list) {
-            const found = findElement(arr[i].list, id);
-            if (found) {
-              return found;
-            }
-          }
-        }
-        return null;
-      };
+      // const findElement = (arr: any[], id: string): any => {
+      //   for (let i = 0; i < arr.length; i++) {
+      //     if (arr[i].id === id) {
+      //       return arr[i];
+      //     }
+      //     if (arr[i].list) {
+      //       const found = findElement(arr[i].list, id);
+      //       if (found) {
+      //         return found;
+      //       }
+      //     }
+      //   }
+      //   return null;
+      // };
 
       const element = findElement(newBadan, id);
       const parentElement = findElement(
@@ -159,7 +178,7 @@ function Component() {
         value.length === 1 &&
         value[0].children.length === 1 &&
         value[0].children[0].text === '';
-      if (isDeletedValue) {
+      if (isDeletedValue && parentElement) {
         parentElement.list = parentElement.list.filter(
           (item: any) => item.id !== id
         );
@@ -169,6 +188,536 @@ function Component() {
 
       return newBadan;
     });
+  };
+
+  const onAdd = (elementType: SmartdocEditorType) => {
+    const isBadan = !selectedBlock?.id;
+    // if (selectedBlock.type)
+    if (isBadan) {
+      if (elementType === 'bab') {
+        const lastBab = getLastElement().lastBab;
+        if (lastBab) {
+          const lastBabNumber = romanToNumber(lastBab.title.split(' ')[1]);
+
+          setBadan((prevBadan) => {
+            const newBadan = deepCopy(prevBadan);
+
+            newBadan.push({
+              id: `bab${lastBabNumber + 1}`,
+              type: 'bab',
+              title: `Bab ${numberToRoman(lastBabNumber + 1)}`,
+              text: [
+                {
+                  type: 'title',
+                  children: [
+                    {
+                      text: 'Type judul bab here...',
+                      bold: true,
+                    },
+                  ],
+                },
+              ],
+              list: [],
+            });
+            return newBadan;
+          });
+
+          setTimeout(() => {
+            setActivePosition(`bab${lastBabNumber + 1}`);
+          }, 200);
+        }
+      } else if (elementType === 'bagian') {
+        //
+      }
+    } else {
+      // if (selectedBlock.type === 'bab') {
+      if (elementType === 'bagian') {
+        const lastBagian = selectedBlock.list?.findLast(
+          (item) => item.type === 'bagian'
+        );
+
+        if (lastBagian) {
+          const lastBagianNumber = sentenceToNumber(
+            lastBagian.title.split(' ')[1]
+          );
+          setBadan((prevBadan) => {
+            const newBadan = deepCopy(prevBadan);
+            const parentElement = newBadan.find(
+              (item: any) => item.id === selectedBlock.id
+            );
+            parentElement.list.push({
+              id: `bag${lastBagianNumber + 1}`,
+              type: 'bagian',
+              title: `Bagian ${numberToSentence(lastBagianNumber + 1)}`,
+              text: [
+                {
+                  type: 'title',
+                  children: [
+                    {
+                      text: 'Type judul bagian here...',
+                      bold: true,
+                    },
+                  ],
+                },
+              ],
+              list: [],
+            });
+            return newBadan;
+          });
+
+          setTimeout(() => {
+            setActivePosition(`bag${lastBagianNumber + 1}`);
+          }, 200);
+        } else {
+          setBadan((prevBadan) => {
+            const newBadan = deepCopy(prevBadan);
+            const parentElement = newBadan.find(
+              (item: any) => item.id === selectedBlock.id
+            );
+            parentElement.list.push({
+              id: 'bag1',
+              type: 'bagian',
+              title: 'Bagian Kesatu',
+              text: [
+                {
+                  type: 'title',
+                  children: [
+                    {
+                      text: 'Type judul bagian here...',
+                      bold: true,
+                    },
+                  ],
+                },
+              ],
+              list: [],
+            });
+            return newBadan;
+          });
+
+          setTimeout(() => {
+            setActivePosition('bag1');
+          }, 200);
+        }
+      } else if (elementType === 'paragraf') {
+        const lastParagraf = selectedBlock.list?.findLast(
+          (item) => item.type === 'paragraf'
+        );
+
+        if (lastParagraf) {
+          const lastParagrafNumber = Number(lastParagraf.title.split(' ')[1]);
+          setBadan((prevBadan) => {
+            const newBadan = deepCopy(prevBadan);
+            const parentElement = newBadan.find(
+              (item: any) => item.id === selectedBlock.id
+            );
+            parentElement.list.push({
+              id: `par${lastParagrafNumber + 1}`,
+              type: 'paragraf',
+              title: `Paragraf ${lastParagrafNumber + 1}`,
+              text: [
+                {
+                  type: 'title',
+                  children: [
+                    {
+                      text: 'Type judul paragraf here...',
+                      bold: true,
+                    },
+                  ],
+                },
+              ],
+              list: [],
+            });
+            return newBadan;
+          });
+
+          setTimeout(() => {
+            setActivePosition(`par${lastParagrafNumber + 1}`);
+          }, 200);
+        } else {
+          setBadan((prevBadan) => {
+            const newBadan = deepCopy(prevBadan);
+            const parentElement = newBadan.find(
+              (item: any) => item.id === selectedBlock.id
+            );
+            parentElement.list.push({
+              id: 'par1',
+              type: 'paragraf',
+              title: 'Paragraf Kesatu',
+              text: [
+                {
+                  type: 'title',
+                  children: [
+                    {
+                      text: 'Type judul paragraf here...',
+                      bold: true,
+                    },
+                  ],
+                },
+              ],
+              list: [],
+            });
+            return newBadan;
+          });
+
+          setTimeout(() => {
+            setActivePosition('par1');
+          }, 200);
+        }
+      } else if (elementType === 'pasal') {
+        const lastPasal =
+          // selectedBlock.list?.findLast((item) => item.type === 'pasal') ||
+          getLastElement().lastPasal;
+
+        if (lastPasal) {
+          const lastPasalNumber = Number(lastPasal.title.split(' ')[1]);
+          setBadan((prevBadan) => {
+            const newBadan = deepCopy(prevBadan);
+
+            // const findElement = (arr: any[], id: string): any => {
+            //   for (let i = 0; i < arr.length; i++) {
+            //     if (arr[i].id === id) {
+            //       return arr[i];
+            //     }
+            //     if (arr[i].list) {
+            //       const found = findElement(arr[i].list, id);
+            //       if (found) {
+            //         return found;
+            //       }
+            //     }
+            //   }
+            //   return null;
+            // };
+            const parentElement = findElement(newBadan, selectedBlock?.id);
+            // console.log(parentElement);
+            parentElement.list = [
+              ...parentElement.list,
+              {
+                id: `pas${lastPasalNumber + 1}`,
+                type: 'pasal',
+                title: `Pasal ...`,
+                text: [
+                  {
+                    type: 'paragraph',
+                    children: [
+                      {
+                        text: `Type pasal here...`,
+                      },
+                    ],
+                  },
+                ],
+                list: [],
+              },
+            ];
+            return newBadan;
+          });
+
+          setTimeout(() => {
+            setActivePosition(`pas${lastPasalNumber + 1}`);
+          }, 200);
+        } else {
+          setBadan((prevBadan) => {
+            const newBadan = deepCopy(prevBadan);
+            const parentElement = newBadan.find(
+              (item: any) => item.id === selectedBlock.id
+            );
+            parentElement.list.push({
+              id: 'pas1',
+              type: 'pasal',
+              title: 'Pasal Kesatu',
+              text: [
+                {
+                  type: 'paragraph',
+                  children: [
+                    {
+                      text: 'Type pasal kesatu here...',
+                    },
+                  ],
+                },
+              ],
+              list: [],
+            });
+            return newBadan;
+          });
+
+          setTimeout(() => {
+            setActivePosition('pas1');
+          }, 200);
+        }
+      } else if (elementType === 'ayat') {
+        const ayatLength =
+          selectedBlock.list?.filter((item) => item.type === 'ayat').length ||
+          0;
+
+        setBadan((prevBadan) => {
+          const newBadan = deepCopy(prevBadan);
+          const parentElement = findElement(newBadan, selectedBlock?.id);
+          if (ayatLength) {
+            parentElement.list.push({
+              id: `ayat${ayatLength + 1}`,
+              type: 'ayat',
+              text: [
+                {
+                  type: 'paragraph',
+                  children: [
+                    {
+                      text: `Type ayat ${ayatLength + 1} here...`,
+                    },
+                  ],
+                },
+              ],
+              list: [],
+            });
+          } else {
+            parentElement.list = [
+              {
+                id: `ayat1`,
+                type: 'ayat',
+                text: [
+                  {
+                    type: 'paragraph',
+                    children: [
+                      {
+                        text: `Type ayat 1 here...`,
+                      },
+                    ],
+                  },
+                ],
+                list: [],
+              },
+            ];
+          }
+          return newBadan;
+        });
+
+        setTimeout(() => {
+          setActivePosition(`ayat${ayatLength + 1}`);
+        }, 200);
+      } else if (elementType === 'numbering') {
+        const numberingLength =
+          selectedBlock.list?.filter((item) => item.type === 'numbering')
+            .length || 0;
+
+        setBadan((prevBadan) => {
+          const newBadan = deepCopy(prevBadan);
+          const parentElement = findElement(newBadan, selectedBlock?.id);
+          if (numberingLength) {
+            parentElement.list.push({
+              id: `numbering${numberingLength + 1}`,
+              type: 'numbering',
+              list: [
+                {
+                  id: `numbering${numberingLength + 1}-1`,
+                  type: 'text_content',
+                  text: [
+                    {
+                      type: 'paragraph',
+                      children: [
+                        {
+                          text: `Type numbering ${numberingLength + 1} here...`,
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            });
+          } else {
+            parentElement.list = [
+              {
+                id: `numbering1`,
+                type: 'numbering',
+                list: [
+                  {
+                    id: `numbering1-1`,
+                    type: 'text_content',
+                    text: [
+                      {
+                        type: 'paragraph',
+                        children: [
+                          {
+                            text: `Type numbering 1 here...`,
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ];
+          }
+          return newBadan;
+        });
+
+        setTimeout(() => {
+          setActivePosition(`numbering${numberingLength + 1}-1`);
+        }, 200);
+      } else if (elementType === 'alphabet') {
+        const alphabetLength =
+          selectedBlock.list?.filter((item) => item.type === 'alphabet')
+            .length || 0;
+
+        setBadan((prevBadan) => {
+          const newBadan = deepCopy(prevBadan);
+          const parentElement = findElement(newBadan, selectedBlock?.id);
+          if (alphabetLength) {
+            parentElement.list.push({
+              id: `alphabet${alphabetLength + 1}`,
+              type: 'alphabet',
+              list: [
+                {
+                  id: `alphabet${alphabetLength + 1}-1`,
+                  type: 'text_content',
+                  text: [
+                    {
+                      type: 'paragraph',
+                      children: [
+                        {
+                          text: `Type alphabet ${alphabetLength + 1} here...`,
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            });
+          } else {
+            parentElement.list = [
+              {
+                id: `alphabet1`,
+                type: 'alphabet',
+                list: [
+                  {
+                    id: `alphabet1-1`,
+                    type: 'text_content',
+                    text: [
+                      {
+                        type: 'paragraph',
+                        children: [
+                          {
+                            text: `Type alphabet 1 here...`,
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ];
+          }
+          return newBadan;
+        });
+
+        setTimeout(() => {
+          setActivePosition(`alphabet${alphabetLength + 1}-1`);
+        }, 200);
+      } else if (elementType === 'bullet') {
+        const bulletLength =
+          selectedBlock.list?.filter((item) => item.type === 'bullet').length ||
+          0;
+
+        setBadan((prevBadan) => {
+          const newBadan = deepCopy(prevBadan);
+          const parentElement = findElement(newBadan, selectedBlock?.id);
+          if (bulletLength) {
+            parentElement.list.push({
+              id: `bullet${bulletLength + 1}`,
+              type: 'bullet',
+              list: [
+                {
+                  id: `bullet${bulletLength + 1}-1`,
+                  type: 'text_content',
+                  text: [
+                    {
+                      type: 'paragraph',
+                      children: [
+                        {
+                          text: `Type bullet ${bulletLength + 1} here...`,
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            });
+          } else {
+            parentElement.list = [
+              {
+                id: `bullet1`,
+                type: 'bullet',
+                list: [
+                  {
+                    id: `bullet1-1`,
+                    type: 'text_content',
+                    text: [
+                      {
+                        type: 'paragraph',
+                        children: [
+                          {
+                            text: `Type bullet 1 here...`,
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ];
+          }
+          return newBadan;
+        });
+
+        setTimeout(() => {
+          setActivePosition(`bullet${bulletLength + 1}-1`);
+        }, 200);
+      } else if (elementType === 'text_content') {
+        const textContentLength =
+          selectedBlock.list?.filter((item) => item.type === 'text_content')
+            .length || 0;
+
+        setBadan((prevBadan) => {
+          const newBadan = deepCopy(prevBadan);
+          const parentElement = findElement(newBadan, selectedBlock?.id);
+          if (textContentLength) {
+            parentElement.list.push({
+              id: `text_content${textContentLength + 1}`,
+              type: 'text_content',
+              text: [
+                {
+                  type: 'paragraph',
+                  children: [
+                    {
+                      text: `Type text content ${textContentLength + 1} here...`,
+                    },
+                  ],
+                },
+              ],
+            });
+          } else {
+            parentElement.list = [
+              {
+                id: `text_content1`,
+                type: 'text_content',
+                text: [
+                  {
+                    type: 'paragraph',
+                    children: [
+                      {
+                        text: `Type text content 1 here...`,
+                      },
+                    ],
+                  },
+                ],
+              },
+            ];
+          }
+          return newBadan;
+        });
+
+        setTimeout(() => {
+          setActivePosition(`text_content${textContentLength + 1}`);
+        }, 200);
+      }
+    }
   };
 
   const renderTextContent = (
@@ -259,7 +808,9 @@ function Component() {
           })}
         </ol>
 
-        {activePosition === alphabet.id && <Add elementType="alphabet" />}
+        {activePosition === alphabet.id && (
+          <Add elementType="alphabet" onClick={onAdd} />
+        )}
       </fieldset>
     );
   };
@@ -292,7 +843,9 @@ function Component() {
           })}
         </ul>
 
-        {activePosition === bullet.id && <Add elementType="bullet" />}
+        {activePosition === bullet.id && (
+          <Add elementType="bullet" onClick={onAdd} />
+        )}
       </fieldset>
     );
   };
@@ -335,7 +888,9 @@ function Component() {
           })}
         </ol>
 
-        {activePosition === numbering.id && <Add elementType="numbering" />}
+        {activePosition === numbering.id && (
+          <Add elementType="numbering" onClick={onAdd} />
+        )}
       </fieldset>
     );
   };
@@ -410,7 +965,9 @@ function Component() {
           })}
         </div>
 
-        {activePosition === ayat.id && <Add elementType="ayat" />}
+        {activePosition === ayat.id && (
+          <Add elementType="ayat" onClick={onAdd} />
+        )}
       </fieldset>
     );
   };
@@ -473,7 +1030,9 @@ function Component() {
           return null;
         })}
 
-        {activePosition === pasal.id && <Add elementType="pasal" />}
+        {activePosition === pasal.id && (
+          <Add elementType="pasal" onClick={onAdd} />
+        )}
       </fieldset>
     );
   };
@@ -527,7 +1086,9 @@ function Component() {
           return null;
         })}
 
-        {activePosition === paragraf.id && <Add elementType="paragraf" />}
+        {activePosition === paragraf.id && (
+          <Add elementType="paragraf" onClick={onAdd} />
+        )}
       </fieldset>
     );
   };
@@ -584,7 +1145,9 @@ function Component() {
           return null;
         })}
 
-        {activePosition === bagian.id && <Add elementType="bagian" />}
+        {activePosition === bagian.id && (
+          <Add elementType="bagian" onClick={onAdd} />
+        )}
       </fieldset>
     );
   };
@@ -662,7 +1225,9 @@ function Component() {
           return null;
         })}
 
-        {activePosition === item.id && <Add elementType={item.type} />}
+        {activePosition === item.id && (
+          <Add elementType={item.type} onClick={onAdd} />
+        )}
       </fieldset>
     );
   };
@@ -689,7 +1254,9 @@ function Component() {
           renderBadan(itemBadan, indexBadan)
         )}
 
-        {activePosition === 'badan' && <Add elementType="badan" />}
+        {activePosition === 'badan' && (
+          <Add elementType="badan" onClick={onAdd} />
+        )}
       </fieldset>
       {/* <fieldset
           className={`

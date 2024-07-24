@@ -1,4 +1,10 @@
-import React, { createContext, useEffect, useMemo, useState } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { BaseEditor } from 'slate';
 import { ReactEditor } from 'slate-react';
 import { DUMMY_BADAN } from '../_constants/badan';
@@ -182,6 +188,12 @@ export const SmartdocContext = createContext<{
     | Alphabet
     | Bullet
     | TextContent;
+  getLastElement: () => {
+    lastBab?: Bab;
+    // lastBagian?: Bagian;
+    // lastParagraf?: Paragraf;
+    lastPasal?: Pasal;
+  };
 }>({
   badan: [],
   setBadan: () => {},
@@ -198,6 +210,12 @@ export const SmartdocContext = createContext<{
     type: 'text_content',
     text: [],
   },
+  getLastElement: () => ({
+    lastBab: undefined,
+    lastBagian: undefined,
+    lastParagraf: undefined,
+    lastPasal: undefined,
+  }),
 });
 
 const DUMMY_PEMBUKAAN: Pembukaan = {
@@ -394,7 +412,57 @@ const SmartdocProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, [activePosition, badan]);
 
-  console.log('selectedBlock ==> ', selectedBlock);
+  // // console.log('selectedBlock ==> ', selectedBlock);
+
+  // const latestBab = useMemo((): Bab | undefined => {
+  //   const bab = badan.filter((item) => item.type === 'bab');
+  //   return bab[bab.length - 1];
+  // }, [badan]);
+
+  // // const latestBagian = useMemo((): Bagian | undefined => {
+  // //   let bagian: Bagian | undefined;
+  // // }, [badan]);
+
+  // console.log('latestBab ==> ', latestBab);
+  // // console.log('latestBagian ==> ', latestBagian);
+
+  const getLastElement = useCallback(() => {
+    let lastBab: Bab | undefined;
+    let lastBagian: Bagian | undefined;
+    let lastParagraf: Paragraf | undefined;
+    let lastPasal: Pasal | undefined;
+
+    function traverse(list: Badan | Array<Bagian | Paragraf | Pasal>) {
+      for (const item of list) {
+        switch (item.type) {
+          case 'bab':
+            lastBab = item as Bab;
+            if (item.list) traverse(item.list);
+            break;
+          case 'bagian':
+            lastBagian = item as Bagian;
+            if (item.list) traverse(item.list);
+            break;
+          case 'paragraf':
+            lastParagraf = item as Paragraf;
+            if (item.list) traverse(item.list);
+            break;
+          case 'pasal':
+            lastPasal = item as Pasal;
+            break;
+        }
+      }
+    }
+
+    traverse(badan);
+
+    return {
+      lastBab,
+      // lastBagian,
+      // lastParagraf,
+      lastPasal,
+    };
+  }, [badan]);
 
   return (
     <SmartdocContext.Provider
@@ -415,6 +483,7 @@ const SmartdocProvider = ({ children }: { children: React.ReactNode }) => {
         setIndexActivePosition,
 
         selectedBlock,
+        getLastElement,
       }}
     >
       {children}
