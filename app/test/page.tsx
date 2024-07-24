@@ -232,8 +232,8 @@ function Component() {
     } else {
       // if (selectedBlock.type === 'bab') {
       if (elementType === 'bagian') {
-        const lastBagian = selectedBlock.list?.findLast(
-          (item) => item.type === 'bagian'
+        const lastBagian = (selectedBlock as any).list?.findLast(
+          (item: any) => item.type === 'bagian'
         );
 
         if (lastBagian) {
@@ -299,8 +299,8 @@ function Component() {
           }, 200);
         }
       } else if (elementType === 'paragraf') {
-        const lastParagraf = selectedBlock.list?.findLast(
-          (item) => item.type === 'paragraf'
+        const lastParagraf = (selectedBlock as any).list?.findLast(
+          (item: any) => item.type === 'paragraf'
         );
 
         if (lastParagraf) {
@@ -445,8 +445,9 @@ function Component() {
         }
       } else if (elementType === 'ayat') {
         const ayatLength =
-          selectedBlock.list?.filter((item) => item.type === 'ayat').length ||
-          0;
+          (selectedBlock as any).list?.filter(
+            (item: any) => item.type === 'ayat'
+          ).length || 0;
 
         setBadan((prevBadan) => {
           const newBadan = deepCopy(prevBadan);
@@ -494,8 +495,9 @@ function Component() {
         }, 200);
       } else if (elementType === 'numbering') {
         const numberingLength =
-          selectedBlock.list?.filter((item) => item.type === 'numbering')
-            .length || 0;
+          (selectedBlock as any).list?.filter(
+            (item: any) => item.type === 'numbering'
+          ).length || 0;
 
         setBadan((prevBadan) => {
           const newBadan = deepCopy(prevBadan);
@@ -553,8 +555,9 @@ function Component() {
         }, 200);
       } else if (elementType === 'alphabet') {
         const alphabetLength =
-          selectedBlock.list?.filter((item) => item.type === 'alphabet')
-            .length || 0;
+          (selectedBlock as any).list?.filter(
+            (item: any) => item.type === 'alphabet'
+          ).length || 0;
 
         setBadan((prevBadan) => {
           const newBadan = deepCopy(prevBadan);
@@ -612,8 +615,9 @@ function Component() {
         }, 200);
       } else if (elementType === 'bullet') {
         const bulletLength =
-          selectedBlock.list?.filter((item) => item.type === 'bullet').length ||
-          0;
+          (selectedBlock as any).list?.filter(
+            (item: any) => item.type === 'bullet'
+          ).length || 0;
 
         setBadan((prevBadan) => {
           const newBadan = deepCopy(prevBadan);
@@ -671,8 +675,9 @@ function Component() {
         }, 200);
       } else if (elementType === 'text_content') {
         const textContentLength =
-          selectedBlock.list?.filter((item) => item.type === 'text_content')
-            .length || 0;
+          (selectedBlock as any).list?.filter(
+            (item: any) => item.type === 'text_content'
+          ).length || 0;
 
         setBadan((prevBadan) => {
           const newBadan = deepCopy(prevBadan);
