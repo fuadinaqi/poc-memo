@@ -95,7 +95,15 @@ export type Pembukaan = {
   };
 };
 
-export type TextContent = {
+export type CommonBlock = {
+  ref_id?: string | null;
+  seq?: number;
+  path?: string;
+  raw_content?: string;
+  title?: string | null;
+};
+
+export type TextContent = CommonBlock & {
   id: string;
   type: 'text_content';
   text: CustomElement[];
@@ -121,14 +129,14 @@ export type Numbering = {
   list: Array<TextContent>;
 };
 
-export type Ayat = {
+export type Ayat = CommonBlock & {
   id: string;
   type: 'ayat';
   text?: CustomElement[];
   list?: Array<Numbering | Alphabet | Bullet>;
 };
 
-export type Pasal = {
+export type Pasal = CommonBlock & {
   id: string;
   type: 'pasal';
   title: string;
@@ -136,7 +144,7 @@ export type Pasal = {
   list?: Array<Ayat | Numbering | Alphabet | Bullet>;
 };
 
-export type Paragraf = {
+export type Paragraf = CommonBlock & {
   id: string;
   type: 'paragraf';
   title: string;
@@ -144,7 +152,7 @@ export type Paragraf = {
   list?: Array<Pasal>;
 };
 
-export type Bagian = {
+export type Bagian = CommonBlock & {
   id: string;
   type: 'bagian';
   title: string;
@@ -152,7 +160,7 @@ export type Bagian = {
   list?: Array<Paragraf | Pasal>;
 };
 
-export type Bab = {
+export type Bab = CommonBlock & {
   id: string;
   type: 'bab';
   title: string;

@@ -106,6 +106,8 @@ function Component() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const [jsonValue, setJsonValue] = useState<string>('');
+
   // useEffect(() => {
   //   if (activePosition) {
   //     Transforms.select(editor, {
@@ -1238,219 +1240,271 @@ function Component() {
   };
 
   return (
-    <div ref={parentRef} className="mt-8 mx-auto w-[712px]">
-      <fieldset
-        className={`
-          relative border p-1 cursor-pointer
-          ${activePosition === 'badan' || hoverPosition === 'badan' ? 'border-blue-400' : 'border-transparent'}
-        `}
-        onClick={(e) => {
-          e.stopPropagation();
-          setActivePosition('badan');
-        }}
-        onMouseOver={(e) => {
-          e.stopPropagation();
-          setHoverPosition('badan');
-        }}
-      >
-        <legend className="ps-1 pe-1">Badan</legend>
-
-        {badan?.map((itemBadan, indexBadan) =>
-          renderBadan(itemBadan, indexBadan)
-        )}
-
-        {activePosition === 'badan' && (
-          <Add elementType="badan" onClick={onAdd} />
-        )}
-      </fieldset>
-      {/* <fieldset
+    <div className="mt-8 mx-auto w-[1096px] flex gap-2">
+      <form className="w-[384px] h-[712px]">
+        <textarea
+          placeholder="Type json badan here start with array... [
+            {
+              'id': 'dmvl7nxdi8ls751l5j79insc',
+              'type': 'bab',
+              'path': 'badan.bab_i',
+              'ref_id': null,
+              'seq': 1,
+              'title': 'BAB I',
+              'raw_content': 'KETENTUAN UMUM',
+              'text': [
+                {
+                  'type': 'title',
+                  'children': [
+                    {
+                      'text': 'KETENTUAN UMUM',
+                      'bold': true,
+                    },
+                  ],
+                },
+              ],
+              ...
+            }
+          ];"
+          className="w-full p-2 border border-blue-500"
+          onChange={(e) => {
+            // console.log(e.target.value);
+            // console.log(JSON.parse(e.target.value));
+            setJsonValue(e.target.value);
+          }}
+          rows={20}
+        />
+        <button
+          type="button"
+          className="w-full p-2 bg-blue-500 text-white"
+          onClick={() => {
+            let a;
+            try {
+              a = JSON.parse(jsonValue);
+              setBadan(a);
+            } catch (e) {
+              alert('Invalid JSON');
+              return console.error(e); // error in the above string (in this case, yes)!
+            }
+          }}
+        >
+          Submit
+        </button>
+      </form>
+      <div ref={parentRef} className="w-[712px]">
+        <fieldset
           className={`
-          border p-1 cursor-pointer
-          ${activePosition === 'pembukaan' || hoverPosition === 'pembukaan' ? 'border-blue-400' : 'border-transparent'}
-        `}
+            relative border p-1 cursor-pointer
+            ${activePosition === 'badan' || hoverPosition === 'badan' ? 'border-blue-400' : 'border-transparent'}
+          `}
           onClick={(e) => {
             e.stopPropagation();
-            setActivePosition('pembukaan');
+            setActivePosition('badan');
           }}
           onMouseOver={(e) => {
             e.stopPropagation();
-            setHoverPosition('pembukaan');
+            setHoverPosition('badan');
           }}
         >
-          <legend className="ps-1 pe-1">Pembuka</legend>
+          <legend className="ps-1 pe-1">Badan</legend>
 
-          <div
-            className="relative"
+          {badan?.map((itemBadan, indexBadan) =>
+            renderBadan(itemBadan, indexBadan)
+          )}
+
+          {activePosition === 'badan' && (
+            <Add elementType="badan" onClick={onAdd} />
+          )}
+        </fieldset>
+        {/* <fieldset
+            className={`
+            border p-1 cursor-pointer
+            ${activePosition === 'pembukaan' || hoverPosition === 'pembukaan' ? 'border-blue-400' : 'border-transparent'}
+          `}
             onClick={(e) => {
               e.stopPropagation();
-              setActivePosition('judul');
+              setActivePosition('pembukaan');
             }}
             onMouseOver={(e) => {
               e.stopPropagation();
-              setHoverPosition('judul');
+              setHoverPosition('pembukaan');
             }}
           >
-            <fieldset
-              className={`
-              px-4 py-2 border cursor-pointer
-              ${activePosition === 'judul' || hoverPosition === 'judul' ? 'border-blue-400' : 'border-transparent'}
-            `}
-            >
-              <legend className="ps-1 pe-1">Judul</legend>
-              {activePosition === 'judul' ? (
-                <Slate
-                  editor={editor}
-                  initialValue={data.judul}
-                  onChange={(value) => setData({ ...data, judul: value })}
-                >
-                  <Editable
-                    className={`
-                    w-full h-full m-0 p-0 focus:outline-none cursor-text
-                  `}
-                    renderElement={renderElement}
-                    renderLeaf={renderLeaf}
-                    autoFocus
-                  />
-                </Slate>
-              ) : (
-                <h1
-                  id="hol-judul-readonly"
-                  className="font-bold text-center cursor-text"
-                >
-                  {data.judul.map((node) => Node.string(node)).join('')}
-                </h1>
-              )}
-            </fieldset>
-          </div>
+            <legend className="ps-1 pe-1">Pembuka</legend>
 
-          <div
-            className="relative"
-            onClick={(e) => {
-              e.stopPropagation();
-              setActivePosition('doa');
-            }}
-            onMouseOver={(e) => {
-              e.stopPropagation();
-              setHoverPosition('doa');
-            }}
-          >
-            <fieldset
-              className={`
-              px-4 py-2 border cursor-pointer
-              ${activePosition === 'doa' || hoverPosition === 'doa' ? 'border-blue-400' : 'border-transparent'}
-            `}
+            <div
+              className="relative"
+              onClick={(e) => {
+                e.stopPropagation();
+                setActivePosition('judul');
+              }}
+              onMouseOver={(e) => {
+                e.stopPropagation();
+                setHoverPosition('judul');
+              }}
             >
-              <legend className="ps-1 pe-1">Doa</legend>
-              {activePosition === 'doa' ? (
-                <SmartdocEditor
-                  initialValue={data.doa.text}
-                  onChange={(value) =>
-                    setData({ ...data, doa: { ...data.doa, text: value } })
-                  }
-                />
-              ) : (
-                <p id="hol-doa-readonly" className="cursor-text text-center">
-                  {data.doa.text.map((node: any) => {
-                    return (
-                      <>
-                        {node.children.map((text: CustomText, i: number) => {
-                          return <SmartdocViewText key={i} text={text} />;
-                        })}
-                        <br />
-                      </>
-                    );
-                  })}
-                </p>
-              )}
-
-              {data.doa.numbering?.map((numbering, i) => (
-                <div
-                  key={i}
-                  className="relative"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setActivePosition('doa_numbering');
-                    setIndexActivePosition(i);
-                  }}
-                  onMouseOver={(e) => {
-                    e.stopPropagation();
-                    setHoverPosition('doa_numbering');
-                    setIndexHoverPosition(i);
-                  }}
-                >
-                  <fieldset
-                    className={`
-                    px-4 py-2 border cursor-pointer
-                    ${(activePosition === 'doa_numbering' || hoverPosition === 'doa_numbering') && (i === indexActivePosition || i === indexHoverPosition) ? 'border-blue-400' : 'border-transparent'}
-                  `}
+              <fieldset
+                className={`
+                px-4 py-2 border cursor-pointer
+                ${activePosition === 'judul' || hoverPosition === 'judul' ? 'border-blue-400' : 'border-transparent'}
+              `}
+              >
+                <legend className="ps-1 pe-1">Judul</legend>
+                {activePosition === 'judul' ? (
+                  <Slate
+                    editor={editor}
+                    initialValue={data.judul}
+                    onChange={(value) => setData({ ...data, judul: value })}
                   >
-                    <legend className="ps-1 pe-1">Numbering</legend>
-                    {activePosition === 'doa_numbering' &&
-                    i === indexActivePosition ? (
-                      <Slate
-                        editor={editor}
-                        initialValue={numbering}
-                        onChange={(value) => {
-                          setData((prev) => ({
-                            ...prev,
-                            doa: {
-                              ...prev.doa,
-                              numbering: prev.doa.numbering?.map((n, j) =>
-                                j === i ? value : n
-                              ),
-                            },
-                          }));
-                        }}
-                      >
-                        <Editable
-                          className={`
-                          w-full h-full m-0 p-0 focus:outline-none cursor-text
-                        `}
-                          renderElement={renderElement}
-                          renderLeaf={renderLeaf}
-                          autoFocus
-                        />
-                      </Slate>
-                    ) : (
-                      <p
-                        id={`hol-doa-numbering-${i}`}
-                        className="cursor-text flex gap-2"
-                      >
-                        <span>{i + 1}. </span>
-                        <div>
-                          {numbering.map((node: any) => {
-                            return (
-                              <>
-                                {node.children.map((text: CustomText) => {
-                                  return (
-                                    <>
-                                      <span
-                                        className={`
-                                        ${text.bold ? 'font-bold' : ''}
-                                        ${text.italic ? 'italic' : ''}
-                                        ${text.underline ? 'underline' : ''}
-                                      `}
-                                      >
-                                        {text.text}
-                                      </span>
-                                      <br />
-                                    </>
-                                  );
-                                })}
-                              </>
-                            );
+                    <Editable
+                      className={`
+                      w-full h-full m-0 p-0 focus:outline-none cursor-text
+                    `}
+                      renderElement={renderElement}
+                      renderLeaf={renderLeaf}
+                      autoFocus
+                    />
+                  </Slate>
+                ) : (
+                  <h1
+                    id="hol-judul-readonly"
+                    className="font-bold text-center cursor-text"
+                  >
+                    {data.judul.map((node) => Node.string(node)).join('')}
+                  </h1>
+                )}
+              </fieldset>
+            </div>
+
+            <div
+              className="relative"
+              onClick={(e) => {
+                e.stopPropagation();
+                setActivePosition('doa');
+              }}
+              onMouseOver={(e) => {
+                e.stopPropagation();
+                setHoverPosition('doa');
+              }}
+            >
+              <fieldset
+                className={`
+                px-4 py-2 border cursor-pointer
+                ${activePosition === 'doa' || hoverPosition === 'doa' ? 'border-blue-400' : 'border-transparent'}
+              `}
+              >
+                <legend className="ps-1 pe-1">Doa</legend>
+                {activePosition === 'doa' ? (
+                  <SmartdocEditor
+                    initialValue={data.doa.text}
+                    onChange={(value) =>
+                      setData({ ...data, doa: { ...data.doa, text: value } })
+                    }
+                  />
+                ) : (
+                  <p id="hol-doa-readonly" className="cursor-text text-center">
+                    {data.doa.text.map((node: any) => {
+                      return (
+                        <>
+                          {node.children.map((text: CustomText, i: number) => {
+                            return <SmartdocViewText key={i} text={text} />;
                           })}
-                        </div>
-                      </p>
-                    )}
-                  </fieldset>
-                </div>
-              ))}
-            </fieldset>
-            {activePosition === 'doa' && <Toolbar editor={editor} />}
-            {activePosition === 'doa' && <Add onClick={onAddNumbering} />}
-          </div>
-        </fieldset> */}
+                          <br />
+                        </>
+                      );
+                    })}
+                  </p>
+                )}
+
+                {data.doa.numbering?.map((numbering, i) => (
+                  <div
+                    key={i}
+                    className="relative"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActivePosition('doa_numbering');
+                      setIndexActivePosition(i);
+                    }}
+                    onMouseOver={(e) => {
+                      e.stopPropagation();
+                      setHoverPosition('doa_numbering');
+                      setIndexHoverPosition(i);
+                    }}
+                  >
+                    <fieldset
+                      className={`
+                      px-4 py-2 border cursor-pointer
+                      ${(activePosition === 'doa_numbering' || hoverPosition === 'doa_numbering') && (i === indexActivePosition || i === indexHoverPosition) ? 'border-blue-400' : 'border-transparent'}
+                    `}
+                    >
+                      <legend className="ps-1 pe-1">Numbering</legend>
+                      {activePosition === 'doa_numbering' &&
+                      i === indexActivePosition ? (
+                        <Slate
+                          editor={editor}
+                          initialValue={numbering}
+                          onChange={(value) => {
+                            setData((prev) => ({
+                              ...prev,
+                              doa: {
+                                ...prev.doa,
+                                numbering: prev.doa.numbering?.map((n, j) =>
+                                  j === i ? value : n
+                                ),
+                              },
+                            }));
+                          }}
+                        >
+                          <Editable
+                            className={`
+                            w-full h-full m-0 p-0 focus:outline-none cursor-text
+                          `}
+                            renderElement={renderElement}
+                            renderLeaf={renderLeaf}
+                            autoFocus
+                          />
+                        </Slate>
+                      ) : (
+                        <p
+                          id={`hol-doa-numbering-${i}`}
+                          className="cursor-text flex gap-2"
+                        >
+                          <span>{i + 1}. </span>
+                          <div>
+                            {numbering.map((node: any) => {
+                              return (
+                                <>
+                                  {node.children.map((text: CustomText) => {
+                                    return (
+                                      <>
+                                        <span
+                                          className={`
+                                          ${text.bold ? 'font-bold' : ''}
+                                          ${text.italic ? 'italic' : ''}
+                                          ${text.underline ? 'underline' : ''}
+                                        `}
+                                        >
+                                          {text.text}
+                                        </span>
+                                        <br />
+                                      </>
+                                    );
+                                  })}
+                                </>
+                              );
+                            })}
+                          </div>
+                        </p>
+                      )}
+                    </fieldset>
+                  </div>
+                ))}
+              </fieldset>
+              {activePosition === 'doa' && <Toolbar editor={editor} />}
+              {activePosition === 'doa' && <Add onClick={onAddNumbering} />}
+            </div>
+          </fieldset> */}
+      </div>
     </div>
   );
 }
