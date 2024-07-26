@@ -51,8 +51,9 @@ export default function SmartdocEditor(props: {
   elementType: SmartdocEditorType;
   initialValue: CustomElement[];
   onChange: (value: Descendant[]) => void;
+  className?: string;
 }) {
-  const { initialValue, onChange } = props;
+  const { initialValue, onChange, className = '' } = props;
   const [editor] = useState(() => withReact(withHistory(createEditor())));
 
   const renderElement = useCallback((props: RenderElementProps) => {
@@ -79,7 +80,7 @@ export default function SmartdocEditor(props: {
   }, []);
 
   return (
-    <div className="relative">
+    <div className={`relative ${className || ''}`}>
       <Slate editor={editor} initialValue={initialValue} onChange={onChange}>
         <Editable
           className={`

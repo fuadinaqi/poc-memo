@@ -1037,6 +1037,16 @@ function Component() {
           return null;
         })}
 
+        <div className="border border-l-4 p-2 border-blue-500">
+          <h5>Penjelasan</h5>
+          <p>
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Eos dolorum
+            eius, voluptatum error possimus totam quis vero quam quia ipsum
+            corporis ad, laudantium pariatur numquam ipsa illum dignissimos ex
+            in.
+          </p>
+        </div>
+
         {activePosition === pasal.id && (
           <Add elementType="pasal" onClick={onAdd} />
         )}

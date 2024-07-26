@@ -8,6 +8,7 @@ import React, {
 import { BaseEditor } from 'slate';
 import { ReactEditor } from 'slate-react';
 import { DUMMY_BADAN } from '../_constants/badan';
+import { DUMMY_PEMBUKAAN } from '../_constants/pembuka';
 
 export type CustomElement = {
   type: 'paragraph' | 'title';
@@ -37,7 +38,12 @@ export type SmartdocEditorType =
   | 'bagian'
   | 'paragraf'
   | 'pasal'
-  | 'ayat';
+  | 'ayat'
+  | 'judul'
+  | 'doa'
+  | 'pihak'
+  | 'setuju'
+  | 'memutuskan';
 
 export type SmartdocPosition =
   // PEMBUKAAN
@@ -68,30 +74,140 @@ export type SmartdocPosition =
   // PENUTUP
   | 'idle';
 
+export type Judul = {
+  id: string;
+  text: CustomElement[];
+};
+
+export type Doa = {
+  id: string;
+  text: CustomElement[];
+};
+
+export type Menimbang = {
+  id: string;
+  text?: CustomElement[];
+  data?:
+    | {
+        id: string;
+        type: 'numbering';
+        list: Array<Omit<TextContent, 'alphabet' | 'bullet'>>;
+      }
+    | {
+        id: string;
+        type: 'alphabet';
+        list: Array<Omit<TextContent, 'alphabet' | 'bullet'>>;
+      }
+    | {
+        id: string;
+        type: 'bullet';
+        list: Array<Omit<TextContent, 'alphabet' | 'bullet'>>;
+      };
+};
+
+export type Mengingat = {
+  id: string;
+  text?: CustomElement[];
+  data?:
+    | {
+        id: string;
+        type: 'numbering';
+        list: Array<Omit<TextContent, 'alphabet' | 'bullet'>>;
+      }
+    | {
+        id: string;
+        type: 'alphabet';
+        list: Array<Omit<TextContent, 'alphabet' | 'bullet'>>;
+      }
+    | {
+        id: string;
+        type: 'bullet';
+        list: Array<Omit<TextContent, 'alphabet' | 'bullet'>>;
+      };
+};
+
+export type Memperhatikan = {
+  id: string;
+  text?: CustomElement[];
+  data?:
+    | {
+        id: string;
+        type: 'numbering';
+        list: Array<Omit<TextContent, 'alphabet' | 'bullet'>>;
+      }
+    | {
+        id: string;
+        type: 'alphabet';
+        list: Array<Omit<TextContent, 'alphabet' | 'bullet'>>;
+      }
+    | {
+        id: string;
+        type: 'bullet';
+        list: Array<Omit<TextContent, 'alphabet' | 'bullet'>>;
+      };
+};
+
+export type Setuju = {
+  id: string;
+  text: CustomElement[];
+};
+
+export type Memutuskan = {
+  id: string;
+  text: CustomElement[];
+};
+
+// export type Pembukaan = {
+//   judul: Judul;
+//   doa?: Doa;
+//   menimbang?: Menimbang;
+//   mengingat?: Mengingat;
+//   setuju?: Setuju;
+//   memutuskan?: Memutuskan;
+// };
+
+export type CommonPembuka =
+  | {
+      type: 'numbering' | 'alphabet' | 'bullet';
+      list: Array<CustomElement[]>;
+    }
+  | {
+      type: 'text_content';
+      text: CustomElement[];
+    };
+
 export type Pembukaan = {
   judul: {
-    editorType: SmartdocEditorType;
-    text: CustomElement[];
+    id: string;
+    type: 'judul';
+    hierarki: string;
+    nomor: string | number;
+    tahun: string | number;
+    tentang: string;
   };
-  doa: {
-    editorType: SmartdocEditorType;
-    text: CustomElement[];
+  doa?: {
+    id: string;
+    type: 'doa';
+    text: string;
   };
-  menimbang: {
-    editorType: SmartdocEditorType;
-    list: Array<CustomElement[]>;
+  pihak: {
+    id: string;
+    type: 'pihak';
+    text: string;
   };
-  mengingat: {
-    editorType: SmartdocEditorType;
-    text: CustomElement[];
-  };
-  setuju: {
-    editorType: SmartdocEditorType;
-    text: CustomElement[];
+  menimbang: Numbering | Alphabet | Bullet | TextContent;
+  mengingat: Numbering | Alphabet | Bullet | TextContent;
+  memperhatikan?: Numbering | Alphabet | Bullet | TextContent;
+  setuju?: {
+    id: string;
+    type: 'setuju';
+    pihak1: string;
+    pihak2: string;
   };
   memutuskan: {
-    editorType: SmartdocEditorType;
-    text: CustomElement[];
+    id: string;
+    type: 'memutuskan';
+    text: string;
   };
 };
 
@@ -171,8 +287,8 @@ export type Bab = CommonBlock & {
 export type Badan = Array<Bab | Bagian | Paragraf | Pasal>;
 
 export const SmartdocContext = createContext<{
-  pembukaan?: Pembukaan;
-  setPembukaan?: React.Dispatch<React.SetStateAction<Pembukaan>>;
+  pembukaan: Pembukaan;
+  setPembukaan: React.Dispatch<React.SetStateAction<Pembukaan>>;
 
   badan: Badan;
   setBadan: React.Dispatch<React.SetStateAction<Badan>>;
@@ -203,6 +319,8 @@ export const SmartdocContext = createContext<{
     lastPasal?: Pasal;
   };
 }>({
+  pembukaan: DUMMY_PEMBUKAAN,
+  setPembukaan: () => {},
   badan: [],
   setBadan: () => {},
   hoverPosition: 'idle',
@@ -225,165 +343,6 @@ export const SmartdocContext = createContext<{
     lastPasal: undefined,
   }),
 });
-
-const DUMMY_PEMBUKAAN: Pembukaan = {
-  judul: {
-    editorType: 'text_content',
-    text: [
-      {
-        type: 'title',
-        children: [
-          {
-            text: 'UNDANG-UNDANG REPUBLIK INDONESIA NOMOR 40 TAHUN 2007 TENTANG PERSEROAN TERBATAS',
-          },
-        ],
-      },
-    ],
-  },
-  doa: {
-    editorType: 'text_content',
-    text: [
-      {
-        type: 'paragraph',
-        children: [
-          {
-            text: 'DENGAN RAHMAT TUHAN YANG MAHA ESA PRESIDEN REPUBLIK INDONESIA',
-          },
-        ],
-      },
-    ],
-  },
-  menimbang: {
-    editorType: 'numbering',
-    list: [
-      [
-        {
-          type: 'paragraph',
-          children: [
-            {
-              text: 'bahwa perekonomian nasional yang diselenggarakan berdasar atas demokrasi ekonomi dengan prinsip kebersamaan, efisiensi berkeadilan, berkelanjutan, berwawasan lingkungan, kemandirian, serta dengan menjaga keseimbangan kemajuan dan kesatuan ekonomi nasional, perlu didukung oleh kelembagaan perekonomian yang kokoh dalam rangka mewujudkan kesejahteraan masyarakat;',
-            },
-          ],
-        },
-        {
-          type: 'paragraph',
-          children: [
-            {
-              text: 'bahwa dalam rangka lebih meningkatkan pembangunan perekonomian nasional dan sekaligus memberikan landasan yang kokoh bagi dunia usaha dalam menghadapi perkembangan perekonomian dunia dan kemajuan ilmu pengetahuan dan teknologi di era globalisasi pada masa mendatang, perlu didukung oleh suatu undang-undang yang mengatur tentang perseroan terbatas yang dapat menjamin terselenggaranya iklim dunia usaha yang kondusif;',
-            },
-          ],
-        },
-        {
-          type: 'paragraph',
-          children: [
-            {
-              text: 'bahwa perseroan terbatas sebagai salah satu pilar pembangunan perekonomian nasional perlu diberikan landasan hukum untuk lebih memacu pembangunan nasional yang disusun sebagai usaha bersama berdasar atas asas kekeluargaan;',
-            },
-          ],
-        },
-        {
-          type: 'paragraph',
-          children: [
-            {
-              text: 'bahwa Undang-Undang Nomor 1 Tahun 1995 tentang Perseroan Terbatas dipandang sudah tidak sesuai lagi dengan perkembangan hukum dan kebutuhan masyarakat sehingga perlu diganti dengan undang-undang yang baru;',
-            },
-            {
-              text: ' Undang-Undang Nomor 1 Tahun 1995 ',
-              underline: true,
-              bold: true,
-            },
-            {
-              text: 'tentang Perseroan Terbatas dipandang sudah tidak sesuai lagi dengan perkembangan hukum dan kebutuhan masyarakat sehingga perlu diganti dengan undang-undang yang baru;',
-            },
-          ],
-        },
-        {
-          type: 'paragraph',
-          children: [
-            {
-              text: 'Pasal 5 ayat (1), Pasal 20, dan Pasal 33 ',
-            },
-            {
-              text: 'Undang-Undang Dasar Negara Republik Indonesia Tahun 1945.',
-              underline: true,
-              bold: true,
-            },
-          ],
-        },
-      ],
-    ],
-  },
-  mengingat: {
-    editorType: 'text_content',
-    text: [
-      {
-        type: 'paragraph',
-        children: [
-          {
-            text: 'Pasal 5 ayat (1), Pasal 20 ayat (2), Pasal 27 ayat (2), Pasal 28, dan Pasal 33 ayat (1) ',
-          },
-          {
-            text: 'Undang-Undang Dasar Negara Republik Indonesia Tahun 1945',
-            underline: true,
-          },
-          {
-            text: '.',
-          },
-        ],
-      },
-    ],
-  },
-  setuju: {
-    editorType: 'text_content',
-    text: [
-      {
-        type: 'paragraph',
-        children: [
-          {
-            text: 'Dengan Persetujuan Bersama:',
-          },
-        ],
-      },
-      {
-        type: 'paragraph',
-        children: [
-          {
-            text: 'DEWAN PERWAKILAN RAKYAT REPUBLIK INDONESIA',
-          },
-        ],
-      },
-      {
-        type: 'paragraph',
-        children: [
-          {
-            text: 'DAN',
-          },
-        ],
-      },
-      {
-        type: 'paragraph',
-        children: [
-          {
-            text: 'PRESIDEN REPUBLIK INDONESIA',
-          },
-        ],
-      },
-    ],
-  },
-  memutuskan: {
-    editorType: 'text_content',
-    text: [
-      {
-        type: 'paragraph',
-        children: [
-          {
-            text: 'UNDANG-UNDANG TENTANG PERSEROAN TERBATAS.',
-          },
-        ],
-      },
-    ],
-  },
-};
 
 const SmartdocProvider = ({ children }: { children: React.ReactNode }) => {
   const [pembukaan, setPembukaan] = useState<Pembukaan>(DUMMY_PEMBUKAAN);
