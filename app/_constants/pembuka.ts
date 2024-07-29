@@ -174,6 +174,7 @@ export const DUMMY_PEMBUKAAN: Pembukaan = {
   setuju: {
     id: 'setuju',
     type: 'setuju',
+    intro: 'Dengan Persetujuan Bersama Antara:',
     pihak1: 'DEWAN PERWAKILAN RAKYAT REPUBLIK INDONESIA',
     pihak2: 'PRESIDEN REPUBLIK INDONESIA',
   },

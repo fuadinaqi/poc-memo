@@ -201,8 +201,9 @@ export type Pembukaan = {
   setuju?: {
     id: string;
     type: 'setuju';
+    intro: string;
     pihak1: string;
-    pihak2: string;
+    pihak2?: string;
   };
   memutuskan: {
     id: string;

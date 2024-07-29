@@ -827,7 +827,44 @@ function Component() {
           </fieldset>
 
           <h1 className="text-center cursor-text">
-            <span>Dengan Persetujuan Bersama Antara:</span>
+            <span
+              className={`
+                relative border cursor-text
+                ${activePosition === 'pembukaan_setuju_intro' || hoverPosition === 'pembukaan_setuju_intro' ? 'border-blue-400' : 'border-transparent'}
+              `}
+              onClick={(e) => {
+                e.stopPropagation();
+                setActivePosition('pembukaan_setuju_intro');
+              }}
+              onMouseOver={(e) => {
+                e.stopPropagation();
+                setHoverPosition('pembukaan_setuju_intro');
+              }}
+            >
+              {activePosition === 'pembukaan_setuju_intro' ? (
+                <SmartdocEditor
+                  className="inline-block"
+                  elementType="setuju"
+                  initialValue={[
+                    {
+                      type: 'paragraph',
+                      children: [{ text: pembukaan?.setuju?.intro ?? '' }],
+                    },
+                  ]}
+                  onChange={(v) => {
+                    const value: CustomElement[] = v as CustomElement[];
+
+                    onChange({
+                      id: 'pembukaan_setuju_intro',
+                      elementType: 'setuju',
+                      value,
+                    });
+                  }}
+                />
+              ) : (
+                pembukaan?.setuju?.intro
+              )}
+            </span>
             <br />
             <span
               className={`
@@ -867,9 +904,13 @@ function Component() {
                 pembukaan?.setuju?.pihak1
               )}
             </span>
-            <br />
-            DAN
-            <br />
+            {pembukaan?.setuju?.pihak2 ? (
+              <>
+                <br />
+                DAN
+                <br />
+              </>
+            ) : null}
             <span
               className={`
                 relative border cursor-text
