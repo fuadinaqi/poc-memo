@@ -20,8 +20,10 @@ export type CustomElement = {
     | 'bullets'
     | 'block-quote'
     | 'heading-one'
-    | 'heading-two';
+    | 'heading-two'
+    | 'link';
   align?: 'left' | 'center' | 'right' | 'justify';
+  url?: string;
   children: CustomText[];
 };
 export type CustomText = {
