@@ -11,7 +11,17 @@ import { DUMMY_BADAN } from '../_constants/badan';
 import { DUMMY_PEMBUKAAN } from '../_constants/pembuka';
 
 export type CustomElement = {
-  type: 'paragraph' | 'title';
+  type:
+    | 'paragraph'
+    | 'title'
+    | 'list-item'
+    | 'numbering'
+    | 'alphabet'
+    | 'bullets'
+    | 'block-quote'
+    | 'heading-one'
+    | 'heading-two';
+  align?: 'left' | 'center' | 'right' | 'justify';
   children: CustomText[];
 };
 export type CustomText = {
