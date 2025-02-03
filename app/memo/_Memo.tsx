@@ -225,7 +225,6 @@ const MemoExample = ({ value }: { value: Descendant[] }) => {
           ) {
             const firstChild = node.children[0].children[0];
             if ('text' in firstChild && firstChild.text === '') {
-              console.log('masuk sini 2', node);
               Transforms.removeNodes(e, { at: path });
               Transforms.insertNodes(
                 e,
@@ -270,7 +269,19 @@ const MemoExample = ({ value }: { value: Descendant[] }) => {
   }, []);
 
   useEffect(() => {
+    if (editor.children.length > 0) {
+      Transforms.removeNodes(editor, {
+        at: {
+          anchor: Editor.start(editor, []),
+          focus: Editor.end(editor, []),
+        },
+        mode: 'highest',
+      });
+    }
     Transforms.insertNodes(editor, value);
+    if (editor.children.length > 0) {
+      Transforms.select(editor, [0, 0]);
+    }
   }, [value]);
 
   return (
@@ -278,7 +289,7 @@ const MemoExample = ({ value }: { value: Descendant[] }) => {
       editor={editor}
       initialValue={value}
       onChange={(e) => {
-        console.log(e);
+        // console.log(e);
       }}
     >
       <Toolbar>
@@ -415,10 +426,6 @@ const Element = (props: RenderElementProps) => {
   const isChildrenBold = childrenArray.some(
     (child) => React.isValidElement(child) && child.props.text?.bold
   );
-
-  if (element.type === 'list-item') {
-    console.log({ attributes, children, element });
-  }
 
   switch (element.type) {
     case 'link':
