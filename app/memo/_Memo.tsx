@@ -19,6 +19,16 @@ import {
   Range,
 } from 'slate';
 import { withHistory } from 'slate-history';
+import {
+  Document,
+  Paragraph,
+  TextRun,
+  Packer,
+  AlignmentType,
+  HeadingLevel,
+  ExternalHyperlink,
+  IParagraphOptions,
+} from 'docx';
 
 import { Button, Icon, Toolbar } from './components';
 import { CustomText } from '../_providers/SmartdocProvider';
@@ -31,6 +41,10 @@ const HOTKEYS = {
 
 const LIST_TYPES = ['numbering', 'bullets', 'alphabet'];
 const TEXT_ALIGN_TYPES = ['left', 'center', 'right', 'justify'];
+
+const getRandomNumber = () => {
+  return Math.floor(Math.random() * 1000000);
+};
 
 const insertLink = (editor: Editor, url: string) => {
   if (editor.selection) {
@@ -284,12 +298,224 @@ const MemoExample = ({ value }: { value: Descendant[] }) => {
     }
   }, [value]);
 
+  const downloadContent = useCallback(() => {
+    const serializeNode = (
+      node: any,
+      i: number,
+      parentType?: string,
+      instance?: number
+    ): any[] => {
+      // Handle text node
+      if (node.text !== undefined) {
+        const splittedByNewLine = node.text.split('\n');
+        return splittedByNewLine.map((text: string, i: number) => {
+          return [
+            new TextRun({
+              text: text,
+              bold: node.bold || false,
+              italics: node.italic || false,
+              underline: node.underline || false,
+              break: i > 0 ? 1 : undefined,
+              font: 'Arial',
+            }),
+          ];
+        });
+      }
+
+      // Handle nested structure
+      if (node.children) {
+        const randomNumber = getRandomNumber();
+        const runs = node.children
+          .flatMap((item: any, i: number) => {
+            return serializeNode(item, i, node.type, randomNumber);
+          })
+          .flat();
+
+        const getAlignment = (align?: string) => {
+          switch (align) {
+            case 'center':
+              return AlignmentType.CENTER;
+            case 'right':
+              return AlignmentType.RIGHT;
+            case 'justify':
+              return AlignmentType.JUSTIFIED;
+            default:
+              return AlignmentType.LEFT;
+          }
+        };
+
+        switch (node.type) {
+          case 'heading-one':
+            return [
+              new Paragraph({
+                children: runs,
+                heading: HeadingLevel.HEADING_1,
+                alignment: getAlignment(node.align),
+              }),
+            ];
+          case 'heading-two':
+            return [
+              new Paragraph({
+                children: runs,
+                heading: HeadingLevel.HEADING_2,
+                alignment: getAlignment(node.align),
+              }),
+            ];
+          case 'list-item': {
+            let paragraphOptions: IParagraphOptions = {
+              children: runs,
+              alignment: getAlignment(node.align),
+            };
+
+            if (parentType === 'bullets') {
+              paragraphOptions = {
+                ...paragraphOptions,
+                numbering: {
+                  reference: 'default-bullet',
+                  level: 0,
+                },
+              };
+            } else if (parentType === 'numbering') {
+              paragraphOptions = {
+                ...paragraphOptions,
+                numbering: {
+                  reference: 'default-numbering',
+                  level: 0,
+                  instance: instance,
+                },
+              };
+            } else if (parentType === 'alphabet') {
+              paragraphOptions = {
+                ...paragraphOptions,
+                numbering: {
+                  reference: 'default-alphabet',
+                  level: 0,
+                  instance: instance,
+                },
+              };
+            }
+
+            return [new Paragraph(paragraphOptions)];
+          }
+          case 'bullets':
+          case 'numbering':
+          case 'alphabet':
+            // Untuk list container, kita hanya perlu mengembalikan children
+            return runs;
+          case 'link':
+            // Menambahkan style untuk link (biru dan underline)
+            return [
+              new ExternalHyperlink({
+                children: [
+                  new TextRun({
+                    text: node.children
+                      .map((child: any) => child.text)
+                      .join(''),
+                    color: '0000FF', // Warna biru
+                    underline: {
+                      type: 'single',
+                    },
+                  }),
+                ],
+                link: node.url,
+              }),
+            ];
+          default:
+            return [
+              new Paragraph({
+                children: runs,
+                alignment: getAlignment(node.align),
+              }),
+            ];
+        }
+      }
+
+      return [];
+    };
+
+    // Tambahkan definisi numbering di awal
+    const doc = new Document({
+      numbering: {
+        config: [
+          {
+            reference: 'default-numbering',
+            levels: [
+              {
+                level: 0,
+                format: 'decimal',
+                text: '%1.',
+                alignment: AlignmentType.LEFT,
+                style: {
+                  paragraph: {
+                    indent: { left: 720, hanging: 360 },
+                  },
+                },
+              },
+            ],
+          },
+          {
+            reference: 'default-bullet',
+            levels: [
+              {
+                level: 0,
+                format: 'bullet',
+                text: '•',
+                alignment: AlignmentType.LEFT,
+                style: {
+                  paragraph: {
+                    indent: { left: 720, hanging: 360 },
+                  },
+                },
+              },
+            ],
+          },
+          {
+            reference: 'default-alphabet',
+            levels: [
+              {
+                level: 0,
+                format: 'lowerLetter',
+                text: '%1.',
+                alignment: AlignmentType.LEFT,
+                style: {
+                  paragraph: {
+                    indent: { left: 720, hanging: 360 },
+                  },
+                },
+              },
+            ],
+          },
+        ],
+      },
+      sections: [
+        {
+          properties: {},
+          children: editor.children.flatMap((item: any, i: number) => {
+            return serializeNode(item, i);
+          }),
+        },
+      ],
+    });
+
+    // Generate dan unduh file
+    Packer.toBlob(doc).then((blob) => {
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'dokumen.docx';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    });
+  }, [editor]);
+
   return (
     <Slate
       editor={editor}
       initialValue={value}
       onChange={(e) => {
-        // console.log(e);
+        console.log(e);
       }}
     >
       <Toolbar>
@@ -307,6 +533,15 @@ const MemoExample = ({ value }: { value: Descendant[] }) => {
         <BlockButton format="justify" icon="justify" />
         <AddLinkButton />
         <RemoveLinkButton />
+        <button
+          className="bg-blue-500 text-white px-4 py-2 rounded-md"
+          onMouseDown={(event) => {
+            event.preventDefault();
+            downloadContent();
+          }}
+        >
+          Download Docx
+        </button>
       </Toolbar>
       <Editable
         renderElement={renderElement}
@@ -546,1035 +781,5 @@ const MarkButton = ({ format, icon }: { format: string; icon: string }) => {
     </Button>
   );
 };
-
-// const initialValue: Descendant[] = [
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': 'Memorandum',
-//         'bold': true,
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': ' ',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': 'Tanggal    : 03-02-2025',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text':
-//           'Tentang    : Implementasi UU Cipta Kerja dan Legalitas Perceraian di Indonesia',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': ' ',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': '___________________________________________',
-//         'bold': true,
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': ' ',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': 'I.   PENDAHULUAN',
-//         'bold': true,
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': ' ',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text':
-//           'Memorandum ini membahas dua isu hukum penting di Indonesia: status terkini implementasi Undang-Undang Cipta Kerja dan legalitas perceraian tanpa melaporkan ke negara. UU Cipta Kerja telah disahkan dan beberapa peraturan pelaksana telah diterbitkan, namun masih menghadapi tantangan implementasi. Sementara itu, perceraian di Indonesia hanya sah jika dilakukan melalui prosedur pengadilan yang resmi, dengan konsekuensi hukum yang signifikan jika tidak dipatuhi.',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': ' ',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': 'II.   PEMBAHASAN',
-//         'bold': true,
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': ' ',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text':
-//           'Berikut adalah pembahasan rinci mengenai kedua isu hukum tersebut:',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': '',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': 'a. Status Implementasi UU Cipta Kerja',
-//         'bold': true,
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text':
-//           'UU Cipta Kerja telah melalui beberapa tahap implementasi sejak disahkan pada 5 Oktober 2020:',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'numbering',
-//     'children': [
-//       {
-//         'type': 'list-item',
-//         'children': [
-//           {
-//             'text':
-//               'Pengesahan: UU Nomor 11 Tahun 2020 tentang Cipta Kerja telah disahkan oleh DPR.',
-//           },
-//         ],
-//       },
-//       {
-//         'type': 'list-item',
-//         'children': [
-//           {
-//             'text':
-//               'Peraturan Pelaksana: Pemerintah telah menerbitkan beberapa peraturan pelaksana, termasuk:',
-//           },
-//           // {
-//           //   'type': 'paragraph',
-//           //   'children': [
-//           //     {
-//           //       'text':
-//           //         '   - PP No. 35 Tahun 2021 tentang PKWT, Alih Daya, Waktu Kerja dan Istirahat, dan PHK.',
-//           //     },
-//           //   ],
-//           // },
-//           // {
-//           //   'type': 'paragraph',
-//           //   'children': [
-//           //     {
-//           //       'text': '   - PP No. 36 Tahun 2021 tentang Pengupahan.',
-//           //     },
-//           //   ],
-//           // },
-//           // {
-//           //   'text':
-//           //     '   - PP No. 35 Tahun 2021 tentang PKWT, Alih Daya, Waktu Kerja dan Istirahat, dan PHK.',
-//           // },
-//           // {
-//           //   'text': '   - PP No. 36 Tahun 2021 tentang Pengupahan.',
-//           // },
-//         ],
-//       },
-//       // {
-//       //   'type': 'list-item',
-//       //   'children': [
-//       //     {
-//       //       'text':
-//       //         '   - PP No. 35 Tahun 2021 tentang PKWT, Alih Daya, Waktu Kerja dan Istirahat, dan PHK.',
-//       //     },
-//       //   ],
-//       // },
-//       // {
-//       //   'type': 'list-item',
-//       //   'children': [
-//       //     {
-//       //       'text': '   - PP No. 36 Tahun 2021 tentang Pengupahan.',
-//       //     },
-//       //   ],
-//       // },
-//       {
-//         'type': 'list-item',
-//         'children': [
-//           {
-//             'text':
-//               'Pedoman Pelaksanaan: Kemenaker telah menerbitkan Kepmen No. 104 Tahun 2021 tentang Pedoman Hubungan Kerja selama Pandemi COVID-19.',
-//           },
-//         ],
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text':
-//           'Meskipun demikian, implementasi UU ini masih menghadapi tantangan, termasuk adanya permohonan uji materi ke Mahkamah Konstitusi.',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': 'b. Legalitas Perceraian Tanpa Melapor ke Negara',
-//         'bold': true,
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text':
-//           'Perceraian di Indonesia diatur secara ketat oleh hukum negara:',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'numbering',
-//     'children': [
-//       {
-//         'type': 'list-item',
-//         'children': [
-//           {
-//             'text':
-//               'Dasar Hukum: UU No. 1 Tahun 1974 tentang Perkawinan, Pasal 39 ayat (1) menyatakan bahwa perceraian hanya sah jika dilakukan di depan sidang pengadilan.',
-//           },
-//         ],
-//       },
-//       {
-//         'type': 'list-item',
-//         'children': [
-//           {
-//             'text':
-//               'Konsekuensi Hukum: Perceraian tanpa melalui pengadilan dianggap tidak sah, dengan implikasi:',
-//           },
-//         ],
-//       },
-//       {
-//         'type': 'list-item',
-//         'children': [
-//           {
-//             'text': '   - Status perkawinan tetap dianggap sah oleh negara.',
-//           },
-//         ],
-//       },
-//       {
-//         'type': 'list-item',
-//         'children': [
-//           {
-//             'text': '   - Tidak ada pembagian harta gono-gini yang sah.',
-//           },
-//         ],
-//       },
-//       {
-//         'type': 'list-item',
-//         'children': [
-//           {
-//             'text': '   - Hak-hak anak tidak terjamin secara hukum.',
-//           },
-//         ],
-//       },
-//       {
-//         'type': 'list-item',
-//         'children': [
-//           {
-//             'text':
-//               'Prosedur yang Benar: Perceraian harus diajukan ke Pengadilan Agama (Islam) atau Pengadilan Negeri (non-Muslim) sesuai UU No. 7 Tahun 1989 tentang Peradilan Agama.',
-//           },
-//         ],
-//       },
-//       {
-//         'type': 'list-item',
-//         'children': [
-//           {
-//             'text':
-//               'Sanksi: Meskipun tidak ada sanksi pidana langsung, perceraian di luar pengadilan dapat menimbulkan masalah hukum di kemudian hari.',
-//           },
-//         ],
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': ' ',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': 'III.  KESIMPULAN',
-//         'bold': true,
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': ' ',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': 'Berdasarkan pembahasan di atas, dapat disimpulkan:',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'numbering',
-//     'children': [
-//       {
-//         'type': 'list-item',
-//         'children': [
-//           {
-//             'text':
-//               'UU Cipta Kerja telah memasuki tahap implementasi dengan diterbitkannya beberapa peraturan pelaksana. Namun, masih diperlukan pengawasan dan evaluasi berkelanjutan terhadap implementasinya.',
-//           },
-//         ],
-//       },
-//       {
-//         'type': 'list-item',
-//         'children': [
-//           {
-//             'text':
-//               'Perceraian di Indonesia hanya sah jika dilakukan melalui prosedur pengadilan yang resmi. Perceraian tanpa melapor ke negara tidak memiliki kekuatan hukum dan dapat menimbulkan masalah hukum di kemudian hari.',
-//           },
-//         ],
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': 'Rekomendasi:',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'numbering',
-//     'children': [
-//       {
-//         'type': 'list-item',
-//         'children': [
-//           {
-//             'text':
-//               'Pemerintah perlu terus mensosialisasikan dan mengevaluasi implementasi UU Cipta Kerja serta peraturan turunannya untuk memastikan efektivitas dan kepatuhan.',
-//           },
-//         ],
-//       },
-//       {
-//         'type': 'list-item',
-//         'children': [
-//           {
-//             'text':
-//               'Masyarakat harus diedukasi tentang pentingnya melakukan perceraian melalui jalur hukum yang sah untuk melindungi hak-hak semua pihak yang terlibat.',
-//           },
-//         ],
-//       },
-//       {
-//         'type': 'list-item',
-//         'children': [
-//           {
-//             'text':
-//               'Penegak hukum dan lembaga peradilan perlu memastikan proses perceraian yang efisien dan adil sesuai dengan ketentuan hukum yang berlaku.',
-//           },
-//         ],
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': ' ',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': 'LAMPIRAN DASAR HUKUM',
-//         'bold': true,
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': ' ',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text':
-//           'Berikut adalah daftar peraturan perundang-undangan yang dirujuk dalam memorandum ini:',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'bullets',
-//     'children': [
-//       {
-//         'type': 'list-item',
-//         'children': [
-//           {
-//             'text': 'Undang-Undang Nomor 11 Tahun 2020 tentang Cipta Kerja',
-//           },
-//         ],
-//       },
-//       {
-//         'type': 'list-item',
-//         'children': [
-//           {
-//             'text': 'Undang-Undang Nomor 1 Tahun 1974 tentang Perkawinan',
-//           },
-//         ],
-//       },
-//       {
-//         'type': 'list-item',
-//         'children': [
-//           {
-//             'text': 'Undang-Undang Nomor 7 Tahun 1989 tentang Peradilan Agama',
-//           },
-//         ],
-//       },
-//       {
-//         'type': 'list-item',
-//         'children': [
-//           {
-//             'text':
-//               'Peraturan Pemerintah Nomor 35 Tahun 2021 tentang Perjanjian Kerja Waktu Tertentu, Alih Daya, Waktu Kerja dan Waktu Istirahat, dan Pemutusan Hubungan Kerja',
-//           },
-//         ],
-//       },
-//       {
-//         'type': 'list-item',
-//         'children': [
-//           {
-//             'text':
-//               'Peraturan Pemerintah Nomor 36 Tahun 2021 tentang Pengupahan',
-//           },
-//         ],
-//       },
-//       {
-//         'type': 'list-item',
-//         'children': [
-//           {
-//             'text':
-//               'Keputusan Menteri Ketenagakerjaan Nomor 104 Tahun 2021 tentang Pedoman Pelaksanaan Hubungan Kerja Selama Masa Pandemi Corona Virus Disease 2019 (COVID-19)',
-//           },
-//         ],
-//       },
-//     ],
-//   },
-// ];
-
-// const initialValue: Descendant[] = [
-//   {
-//     type: 'paragraph',
-//     children: [
-//       {
-//         text: 'This is a paragraph',
-//       },
-//     ],
-//   },
-//   // {
-//   //   type: 'paragraph',
-//   //   children: [
-//   //     { text: 'This is editable ' },
-//   //     { text: 'rich', bold: true },
-//   //     { text: ' text, ' },
-//   //     { text: 'much', italic: true },
-//   //     { text: ' better than a ' },
-//   //     { text: '<textarea>' },
-//   //     { text: '!' },
-//   //   ],
-//   // },
-//   // {
-//   //   type: 'paragraph',
-//   //   children: [
-//   //     {
-//   //       text: "Since it's rich text, you can do things like turn a selection of text ",
-//   //     },
-//   //     { text: 'bold', bold: true },
-//   //     {
-//   //       text: ', or add a semantically rendered block quote in the middle of the page, like this:',
-//   //     },
-//   //   ],
-//   // },
-//   // {
-//   //   type: 'block-quote',
-//   //   children: [{ text: 'A wise quote.' }],
-//   // },
-//   // {
-//   //   type: 'paragraph',
-//   //   align: 'center',
-//   //   children: [{ text: 'Try it out for yourself!' }],
-//   // },
-// ];
-
-// const initialValuez: Descendant[] = [
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': 'Memorandum',
-//         'bold': true,
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': ' ',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': 'Tanggal    : 03-02-2025',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text':
-//           'Tentang    : Implementasi UU Cipta Kerja dan Legalitas Perceraian di Indonesia',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': ' ',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': '___________________________________________',
-//         'bold': true,
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': ' ',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': 'I.   PENDAHULUAN',
-//         'bold': true,
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': ' ',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text':
-//           'Memorandum ini membahas dua isu hukum penting di Indonesia: status terkini implementasi Undang-Undang Cipta Kerja dan legalitas perceraian tanpa melaporkan ke negara. UU Cipta Kerja telah disahkan dan beberapa peraturan pelaksana telah diterbitkan, namun masih menghadapi tantangan implementasi. Sementara itu, perceraian di Indonesia hanya sah jika dilakukan melalui prosedur pengadilan yang resmi, dengan konsekuensi hukum yang signifikan jika tidak dipatuhi.',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': ' ',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': 'II.   PEMBAHASAN',
-//         'bold': true,
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': ' ',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text':
-//           'Berikut adalah pembahasan rinci mengenai kedua isu hukum tersebut:',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': ' ',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': 'a. Status Implementasi UU Cipta Kerja',
-//         'bold': true,
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text':
-//           'UU Cipta Kerja telah melalui beberapa tahap implementasi sejak disahkan pada 5 Oktober 2020:',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text':
-//           '1. Pengesahan: UU Nomor 11 Tahun 2020 tentang Cipta Kerja telah disahkan oleh DPR.',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text':
-//           '2. Peraturan Pelaksana: Pemerintah telah menerbitkan beberapa peraturan pelaksana, termasuk:',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text':
-//           '   - PP No. 35 Tahun 2021 tentang PKWT, Alih Daya, Waktu Kerja dan Istirahat, dan PHK.',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': '   - PP No. 36 Tahun 2021 tentang Pengupahan.',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text':
-//           '3. Pedoman Pelaksanaan: Kemenaker telah menerbitkan Kepmen No. 104 Tahun 2021 tentang Pedoman Hubungan Kerja selama Pandemi COVID-19.',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text':
-//           'Meskipun demikian, implementasi UU ini masih menghadapi tantangan, termasuk adanya permohonan uji materi ke Mahkamah Konstitusi.',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': 'b. Legalitas Perceraian Tanpa Melapor ke Negara',
-//         'bold': true,
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text':
-//           'Perceraian di Indonesia diatur secara ketat oleh hukum negara:',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text':
-//           '1. Dasar Hukum: UU No. 1 Tahun 1974 tentang Perkawinan, Pasal 39 ayat (1) menyatakan bahwa perceraian hanya sah jika dilakukan di depan sidang pengadilan.',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text':
-//           '2. Konsekuensi Hukum: Perceraian tanpa melalui pengadilan dianggap tidak sah, dengan implikasi:',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': '   - Status perkawinan tetap dianggap sah oleh negara.',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': '   - Tidak ada pembagian harta gono-gini yang sah.',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': '   - Hak-hak anak tidak terjamin secara hukum.',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text':
-//           '3. Prosedur yang Benar: Perceraian harus diajukan ke Pengadilan Agama (Islam) atau Pengadilan Negeri (non-Muslim) sesuai UU No. 7 Tahun 1989 tentang Peradilan Agama.',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text':
-//           '4. Sanksi: Meskipun tidak ada sanksi pidana langsung, perceraian di luar pengadilan dapat menimbulkan masalah hukum di kemudian hari.',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': ' ',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': 'III.  KESIMPULAN',
-//         'bold': true,
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': ' ',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': 'Berdasarkan pembahasan di atas, dapat disimpulkan:',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text':
-//           '1. UU Cipta Kerja telah memasuki tahap implementasi dengan diterbitkannya beberapa peraturan pelaksana. Namun, masih diperlukan pengawasan dan evaluasi berkelanjutan terhadap implementasinya.',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text':
-//           '2. Perceraian di Indonesia hanya sah jika dilakukan melalui prosedur pengadilan yang resmi. Perceraian tanpa melapor ke negara tidak memiliki kekuatan hukum dan dapat menimbulkan masalah hukum di kemudian hari.',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': 'Rekomendasi:',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text':
-//           '1. Pemerintah perlu terus mensosialisasikan dan mengevaluasi implementasi UU Cipta Kerja serta peraturan turunannya untuk memastikan efektivitas dan kepatuhan.',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text':
-//           '2. Masyarakat harus diedukasi tentang pentingnya melakukan perceraian melalui jalur hukum yang sah untuk melindungi hak-hak semua pihak yang terlibat.',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text':
-//           '3. Penegak hukum dan lembaga peradilan perlu memastikan proses perceraian yang efisien dan adil sesuai dengan ketentuan hukum yang berlaku.',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': ' ',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': 'LAMPIRAN DASAR HUKUM',
-//         'bold': true,
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text': ' ',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'text':
-//           'Berikut adalah daftar peraturan perundang-undangan yang dirujuk dalam memorandum ini:',
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'type': 'link',
-//         'url': 'https://www.google.com',
-//         'children': [
-//           {
-//             'text': '- Undang-Undang Nomor 11 Tahun 2020 tentang Cipta Kerja',
-//           },
-//         ],
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'type': 'link',
-//         'url': 'https://www.google.com',
-//         'children': [
-//           {
-//             'text': '- Undang-Undang Nomor 1 Tahun 1974 tentang Perkawinan',
-//           },
-//         ],
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'type': 'link',
-//         'url': 'https://www.google.com',
-//         'children': [
-//           {
-//             'text':
-//               '- Undang-Undang Nomor 7 Tahun 1989 tentang Peradilan Agama',
-//           },
-//         ],
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'type': 'link',
-//         'url': 'https://www.google.com',
-//         'children': [
-//           {
-//             'text':
-//               '- Peraturan Pemerintah Nomor 35 Tahun 2021 tentang Perjanjian Kerja Waktu Tertentu, Alih Daya, Waktu Kerja dan Waktu Istirahat, dan Pemutusan Hubungan Kerja',
-//           },
-//         ],
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'type': 'link',
-//         'url': 'https://www.google.com',
-//         'children': [
-//           {
-//             'text':
-//               '- Peraturan Pemerintah Nomor 36 Tahun 2021 tentang Pengupahan',
-//           },
-//         ],
-//       },
-//     ],
-//   },
-//   {
-//     'type': 'paragraph',
-//     'children': [
-//       {
-//         'type': 'link',
-//         'url': 'https://www.google.com',
-//         'children': [
-//           {
-//             'text':
-//               '- Keputusan Menteri Ketenagakerjaan Nomor 104 Tahun 2021 tentang Pedoman Pelaksanaan Hubungan Kerja Selama Masa Pandemi Corona Virus Disease 2019 (COVID-19)',
-//           },
-//         ],
-//       },
-//     ],
-//   },
-// ];
 
 export default MemoExample;
