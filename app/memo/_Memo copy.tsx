@@ -19,17 +19,9 @@ import {
   Range,
 } from 'slate';
 import { withHistory } from 'slate-history';
-import {
-  Document,
-  Paragraph,
-  TextRun,
-  Packer,
-  AlignmentType,
-  HeadingLevel,
-  ExternalHyperlink,
-  IParagraphOptions,
-} from 'docx';
-import html2pdf from 'html2pdf.js';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+
 import { Button, Icon, Toolbar } from './components';
 import { CustomText } from '../_providers/SmartdocProvider';
 
@@ -41,10 +33,6 @@ const HOTKEYS = {
 
 const LIST_TYPES = ['numbering', 'bullets', 'alphabet'];
 const TEXT_ALIGN_TYPES = ['left', 'center', 'right', 'justify'];
-
-const getRandomNumber = () => {
-  return Math.floor(Math.random() * 1000000);
-};
 
 const insertLink = (editor: Editor, url: string) => {
   if (editor.selection) {
@@ -298,314 +286,72 @@ const MemoExample = ({ value }: { value: Descendant[] }) => {
     }
   }, [value]);
 
-  const downloadContent = useCallback(() => {
-    const serializeNode = (
-      node: any,
-      i: number,
-      parentType?: string,
-      instance?: number
-    ): any[] => {
-      // Handle text node
-      if (node.text !== undefined) {
-        const splittedByNewLine = node.text.split('\n');
-        return splittedByNewLine.map((text: string, i: number) => {
-          return [
-            new TextRun({
-              text: text,
-              bold: node.bold || false,
-              italics: node.italic || false,
-              underline: node.underline || false,
-              break: i > 0 ? 1 : undefined,
-              font: 'Arial',
-            }),
-          ];
-        });
-      }
-
-      // Handle nested structure
-      if (node.children) {
-        const randomNumber = getRandomNumber();
-        const runs = node.children
-          .flatMap((item: any, i: number) => {
-            return serializeNode(item, i, node.type, randomNumber);
-          })
-          .flat();
-
-        const getAlignment = (align?: string) => {
-          switch (align) {
-            case 'center':
-              return AlignmentType.CENTER;
-            case 'right':
-              return AlignmentType.RIGHT;
-            case 'justify':
-              return AlignmentType.JUSTIFIED;
-            default:
-              return AlignmentType.LEFT;
-          }
-        };
-
-        switch (node.type) {
-          case 'heading-one':
-            return [
-              new Paragraph({
-                children: runs,
-                heading: HeadingLevel.HEADING_1,
-                alignment: getAlignment(node.align),
-              }),
-            ];
-          case 'heading-two':
-            return [
-              new Paragraph({
-                children: runs,
-                heading: HeadingLevel.HEADING_2,
-                alignment: getAlignment(node.align),
-              }),
-            ];
-          case 'list-item': {
-            let paragraphOptions: IParagraphOptions = {
-              children: runs,
-              alignment: getAlignment(node.align),
-            };
-
-            if (parentType === 'bullets') {
-              paragraphOptions = {
-                ...paragraphOptions,
-                numbering: {
-                  reference: 'default-bullet',
-                  level: 0,
-                },
-              };
-            } else if (parentType === 'numbering') {
-              paragraphOptions = {
-                ...paragraphOptions,
-                numbering: {
-                  reference: 'default-numbering',
-                  level: 0,
-                  instance: instance,
-                },
-              };
-            } else if (parentType === 'alphabet') {
-              paragraphOptions = {
-                ...paragraphOptions,
-                numbering: {
-                  reference: 'default-alphabet',
-                  level: 0,
-                  instance: instance,
-                },
-              };
-            }
-
-            return [new Paragraph(paragraphOptions)];
-          }
-          case 'bullets':
-          case 'numbering':
-          case 'alphabet':
-            // Untuk list container, kita hanya perlu mengembalikan children
-            return runs;
-          case 'link':
-            // Menambahkan style untuk link (biru dan underline)
-            return [
-              new ExternalHyperlink({
-                children: [
-                  new TextRun({
-                    text: node.children
-                      .map((child: any) => child.text)
-                      .join(''),
-                    color: '0000FF', // Warna biru
-                    underline: {
-                      type: 'single',
-                    },
-                  }),
-                ],
-                link: node.url,
-              }),
-            ];
-          default:
-            return [
-              new Paragraph({
-                children: runs,
-                alignment: getAlignment(node.align),
-              }),
-            ];
-        }
-      }
-
-      return [];
-    };
-
-    // Tambahkan definisi numbering di awal
-    const doc = new Document({
-      numbering: {
-        config: [
-          {
-            reference: 'default-numbering',
-            levels: [
-              {
-                level: 0,
-                format: 'decimal',
-                text: '%1.',
-                alignment: AlignmentType.LEFT,
-                style: {
-                  paragraph: {
-                    indent: { left: 720, hanging: 360 },
-                  },
-                },
-              },
-            ],
-          },
-          {
-            reference: 'default-bullet',
-            levels: [
-              {
-                level: 0,
-                format: 'bullet',
-                text: '•',
-                alignment: AlignmentType.LEFT,
-                style: {
-                  paragraph: {
-                    indent: { left: 720, hanging: 360 },
-                  },
-                },
-              },
-            ],
-          },
-          {
-            reference: 'default-alphabet',
-            levels: [
-              {
-                level: 0,
-                format: 'lowerLetter',
-                text: '%1.',
-                alignment: AlignmentType.LEFT,
-                style: {
-                  paragraph: {
-                    indent: { left: 720, hanging: 360 },
-                  },
-                },
-              },
-            ],
-          },
-        ],
-      },
-      sections: [
-        {
-          properties: {},
-          children: editor.children.flatMap((item: any, i: number) => {
-            return serializeNode(item, i);
-          }),
-        },
-      ],
-    });
-
-    // Generate dan unduh file
-    Packer.toBlob(doc).then((blob) => {
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'dokumen.docx';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    });
-  }, [editor]);
-
-  const downloadPdf = useCallback(async () => {
+  const handleDownloadPDF = useCallback(async () => {
     try {
       const element = document.querySelector('.slate-editor');
       if (!element) return;
 
-      const opt = {
-        margin: [15, 15, 15, 25], // [top, right, bottom, left] - margin kiri lebih besar untuk list
-        filename: 'dokumen.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff',
-        },
-        jsPDF: {
-          unit: 'mm',
-          format: 'a4',
-          orientation: 'portrait',
-        },
-        pagebreak: { mode: 'avoid-all' },
-        // Tambahkan konfigurasi font untuk memastikan konsistensi
-        font: 'helvetica',
-        fontStyle: 'normal',
-      };
+      // Definisikan margin dan ukuran halaman (dalam mm)
+      const margin = 15;
+      const a4Width = 210;
+      const a4Height = 297;
+      const pageWidth = a4Width - 2 * margin;
+      const pageHeight = a4Height - 2 * margin;
 
-      // Tambahkan class temporary untuk styling list
-      element.querySelectorAll('ol, ul').forEach((list) => {
-        list.classList.add('pdf-list');
+      // Buat instance PDF dengan margin
+      const pdf = new jsPDF('p', 'mm', 'a4');
+
+      // Konversi ke canvas dengan skala yang lebih tinggi untuk kualitas lebih baik
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        height: element.scrollHeight,
+        windowWidth: element.scrollWidth,
       });
 
-      await html2pdf().set(opt).from(element).save();
+      // Hitung rasio dan dimensi dengan mempertimbangkan margin
+      const imgWidth = pageWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-      // Bersihkan class temporary
-      element.querySelectorAll('.pdf-list').forEach((list) => {
-        list.classList.remove('pdf-list');
-      });
+      // Bagi konten ke beberapa halaman
+      let heightLeft = imgHeight;
+      let position = 0;
+      let pageNumber = 1;
+
+      // Tambahkan halaman pertama dengan margin
+      pdf.addImage(
+        canvas.toDataURL('image/png'),
+        'PNG',
+        margin,
+        margin,
+        imgWidth,
+        imgHeight
+      );
+      heightLeft -= pageHeight;
+
+      // Tambahkan halaman tambahan dengan margin yang konsisten
+      while (heightLeft > 0) {
+        position = -pageHeight * pageNumber + margin;
+        pdf.addPage();
+        pdf.addImage(
+          canvas.toDataURL('image/png'),
+          'PNG',
+          margin,
+          position,
+          imgWidth,
+          imgHeight
+        );
+        heightLeft -= pageHeight;
+        pageNumber++;
+      }
+
+      pdf.save('dokumen.pdf');
     } catch (error) {
       console.error('Gagal mengunduh PDF:', error);
     }
   }, []);
-
-  // Fungsi helper untuk mengkonversi node ke HTML
-  const serializeToHtml = (node: any): HTMLElement => {
-    if (node.text !== undefined) {
-      const span = document.createElement('span');
-      span.textContent = node.text;
-      if (node.bold) span.style.fontWeight = 'bold';
-      if (node.italic) span.style.fontStyle = 'italic';
-      if (node.underline) span.style.textDecoration = 'underline';
-      return span;
-    }
-
-    const getElement = (type: string): HTMLElement => {
-      switch (type) {
-        case 'heading-one':
-          return document.createElement('h1');
-        case 'heading-two':
-          return document.createElement('h2');
-        case 'bullets':
-          return document.createElement('ul');
-        case 'numbering':
-          return document.createElement('ol');
-        case 'alphabet': {
-          const ol = document.createElement('ol');
-          ol.style.listStyleType = 'lower-alpha';
-          return ol;
-        }
-        case 'list-item':
-          return document.createElement('li');
-        case 'link': {
-          const a = document.createElement('a');
-          a.href = node.url;
-          a.style.color = 'blue';
-          a.style.textDecoration = 'underline';
-          return a;
-        }
-        default:
-          return document.createElement('p');
-      }
-    };
-
-    const element = getElement(node.type);
-
-    if (node.align) {
-      element.style.textAlign = node.align;
-    }
-
-    if (node.children) {
-      node.children.forEach((child: any) => {
-        element.appendChild(serializeToHtml(child));
-      });
-    }
-
-    return element;
-  };
 
   return (
     <div className="relative">
@@ -632,31 +378,16 @@ const MemoExample = ({ value }: { value: Descendant[] }) => {
             <BlockButton format="justify" icon="justify" />
             <AddLinkButton />
             <RemoveLinkButton />
-            <button
-              className="bg-blue-500 text-white px-4 py-2 rounded-md"
-              onMouseDown={(event) => {
-                event.preventDefault();
-                downloadContent();
-              }}
-            >
-              Download Docx
-            </button>
-            <button
-              className="bg-blue-500 text-white px-4 py-2 rounded-md ml-2"
-              onMouseDown={(event) => {
-                event.preventDefault();
-                downloadPdf();
-              }}
-            >
-              Download PDF
-            </button>
           </Toolbar>
+          <Button onMouseDown={handleDownloadPDF}>
+            <Icon>download</Icon>
+          </Button>
         </div>
-        <div className="slate-editor bg-white rounded-lg">
+        <div className="slate-editor bg-white p-4 rounded-lg">
           <Editable
             renderElement={renderElement}
             renderLeaf={renderLeaf}
-            placeholder="Enter some rich text…"
+            placeholder="Masukkan teks kaya di sini..."
             spellCheck
             autoFocus
             onKeyDown={(event) => {

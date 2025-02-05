@@ -26,10 +26,8 @@ import {
   Packer,
   AlignmentType,
   HeadingLevel,
-  ExternalHyperlink,
-  IParagraphOptions,
 } from 'docx';
-import html2pdf from 'html2pdf.js';
+
 import { Button, Icon, Toolbar } from './components';
 import { CustomText } from '../_providers/SmartdocProvider';
 
@@ -41,10 +39,6 @@ const HOTKEYS = {
 
 const LIST_TYPES = ['numbering', 'bullets', 'alphabet'];
 const TEXT_ALIGN_TYPES = ['left', 'center', 'right', 'justify'];
-
-const getRandomNumber = () => {
-  return Math.floor(Math.random() * 1000000);
-};
 
 const insertLink = (editor: Editor, url: string) => {
   if (editor.selection) {
@@ -299,38 +293,26 @@ const MemoExample = ({ value }: { value: Descendant[] }) => {
   }, [value]);
 
   const downloadContent = useCallback(() => {
-    const serializeNode = (
-      node: any,
-      i: number,
-      parentType?: string,
-      instance?: number
-    ): any[] => {
+    // Fungsi untuk mengkonversi node Slate ke docx elements
+    const serializeNode = (node: any): any[] => {
       // Handle text node
       if (node.text !== undefined) {
-        const splittedByNewLine = node.text.split('\n');
-        return splittedByNewLine.map((text: string, i: number) => {
-          return [
-            new TextRun({
-              text: text,
-              bold: node.bold || false,
-              italics: node.italic || false,
-              underline: node.underline || false,
-              break: i > 0 ? 1 : undefined,
-              font: 'Arial',
-            }),
-          ];
-        });
+        return [
+          new TextRun({
+            text: node.text,
+            bold: node.bold || false,
+            italics: node.italic || false,
+            underline: node.underline || false,
+          }),
+        ];
       }
 
       // Handle nested structure
       if (node.children) {
-        const randomNumber = getRandomNumber();
-        const runs = node.children
-          .flatMap((item: any, i: number) => {
-            return serializeNode(item, i, node.type, randomNumber);
-          })
-          .flat();
+        // Gabungkan semua TextRun dari children
+        const runs = node.children.flatMap(serializeNode).flat();
 
+        // Konversi alignment Slate ke docx
         const getAlignment = (align?: string) => {
           switch (align) {
             case 'center':
@@ -344,6 +326,7 @@ const MemoExample = ({ value }: { value: Descendant[] }) => {
           }
         };
 
+        // Buat paragraf sesuai tipe node
         switch (node.type) {
           case 'heading-one':
             return [
@@ -361,65 +344,24 @@ const MemoExample = ({ value }: { value: Descendant[] }) => {
                 alignment: getAlignment(node.align),
               }),
             ];
-          case 'list-item': {
-            let paragraphOptions: IParagraphOptions = {
-              children: runs,
-              alignment: getAlignment(node.align),
-            };
-
-            if (parentType === 'bullets') {
-              paragraphOptions = {
-                ...paragraphOptions,
-                numbering: {
-                  reference: 'default-bullet',
+          case 'list-item':
+            return [
+              new Paragraph({
+                children: runs,
+                bullet: {
                   level: 0,
                 },
-              };
-            } else if (parentType === 'numbering') {
-              paragraphOptions = {
-                ...paragraphOptions,
-                numbering: {
-                  reference: 'default-numbering',
-                  level: 0,
-                  instance: instance,
-                },
-              };
-            } else if (parentType === 'alphabet') {
-              paragraphOptions = {
-                ...paragraphOptions,
-                numbering: {
-                  reference: 'default-alphabet',
-                  level: 0,
-                  instance: instance,
-                },
-              };
-            }
-
-            return [new Paragraph(paragraphOptions)];
-          }
+                alignment: getAlignment(node.align),
+              }),
+            ];
           case 'bullets':
           case 'numbering':
           case 'alphabet':
             // Untuk list container, kita hanya perlu mengembalikan children
             return runs;
           case 'link':
-            // Menambahkan style untuk link (biru dan underline)
-            return [
-              new ExternalHyperlink({
-                children: [
-                  new TextRun({
-                    text: node.children
-                      .map((child: any) => child.text)
-                      .join(''),
-                    color: '0000FF', // Warna biru
-                    underline: {
-                      type: 'single',
-                    },
-                  }),
-                ],
-                link: node.url,
-              }),
-            ];
+            // Untuk link, kita hanya mengembalikan TextRun
+            return runs;
           default:
             return [
               new Paragraph({
@@ -433,66 +375,12 @@ const MemoExample = ({ value }: { value: Descendant[] }) => {
       return [];
     };
 
-    // Tambahkan definisi numbering di awal
+    // Buat dokumen baru
     const doc = new Document({
-      numbering: {
-        config: [
-          {
-            reference: 'default-numbering',
-            levels: [
-              {
-                level: 0,
-                format: 'decimal',
-                text: '%1.',
-                alignment: AlignmentType.LEFT,
-                style: {
-                  paragraph: {
-                    indent: { left: 720, hanging: 360 },
-                  },
-                },
-              },
-            ],
-          },
-          {
-            reference: 'default-bullet',
-            levels: [
-              {
-                level: 0,
-                format: 'bullet',
-                text: '•',
-                alignment: AlignmentType.LEFT,
-                style: {
-                  paragraph: {
-                    indent: { left: 720, hanging: 360 },
-                  },
-                },
-              },
-            ],
-          },
-          {
-            reference: 'default-alphabet',
-            levels: [
-              {
-                level: 0,
-                format: 'lowerLetter',
-                text: '%1.',
-                alignment: AlignmentType.LEFT,
-                style: {
-                  paragraph: {
-                    indent: { left: 720, hanging: 360 },
-                  },
-                },
-              },
-            ],
-          },
-        ],
-      },
       sections: [
         {
           properties: {},
-          children: editor.children.flatMap((item: any, i: number) => {
-            return serializeNode(item, i);
-          }),
+          children: editor.children.flatMap(serializeNode),
         },
       ],
     });
@@ -510,191 +398,78 @@ const MemoExample = ({ value }: { value: Descendant[] }) => {
     });
   }, [editor]);
 
-  const downloadPdf = useCallback(async () => {
-    try {
-      const element = document.querySelector('.slate-editor');
-      if (!element) return;
-
-      const opt = {
-        margin: [15, 15, 15, 25], // [top, right, bottom, left] - margin kiri lebih besar untuk list
-        filename: 'dokumen.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff',
-        },
-        jsPDF: {
-          unit: 'mm',
-          format: 'a4',
-          orientation: 'portrait',
-        },
-        pagebreak: { mode: 'avoid-all' },
-        // Tambahkan konfigurasi font untuk memastikan konsistensi
-        font: 'helvetica',
-        fontStyle: 'normal',
-      };
-
-      // Tambahkan class temporary untuk styling list
-      element.querySelectorAll('ol, ul').forEach((list) => {
-        list.classList.add('pdf-list');
-      });
-
-      await html2pdf().set(opt).from(element).save();
-
-      // Bersihkan class temporary
-      element.querySelectorAll('.pdf-list').forEach((list) => {
-        list.classList.remove('pdf-list');
-      });
-    } catch (error) {
-      console.error('Gagal mengunduh PDF:', error);
-    }
-  }, []);
-
-  // Fungsi helper untuk mengkonversi node ke HTML
-  const serializeToHtml = (node: any): HTMLElement => {
-    if (node.text !== undefined) {
-      const span = document.createElement('span');
-      span.textContent = node.text;
-      if (node.bold) span.style.fontWeight = 'bold';
-      if (node.italic) span.style.fontStyle = 'italic';
-      if (node.underline) span.style.textDecoration = 'underline';
-      return span;
-    }
-
-    const getElement = (type: string): HTMLElement => {
-      switch (type) {
-        case 'heading-one':
-          return document.createElement('h1');
-        case 'heading-two':
-          return document.createElement('h2');
-        case 'bullets':
-          return document.createElement('ul');
-        case 'numbering':
-          return document.createElement('ol');
-        case 'alphabet': {
-          const ol = document.createElement('ol');
-          ol.style.listStyleType = 'lower-alpha';
-          return ol;
-        }
-        case 'list-item':
-          return document.createElement('li');
-        case 'link': {
-          const a = document.createElement('a');
-          a.href = node.url;
-          a.style.color = 'blue';
-          a.style.textDecoration = 'underline';
-          return a;
-        }
-        default:
-          return document.createElement('p');
-      }
-    };
-
-    const element = getElement(node.type);
-
-    if (node.align) {
-      element.style.textAlign = node.align;
-    }
-
-    if (node.children) {
-      node.children.forEach((child: any) => {
-        element.appendChild(serializeToHtml(child));
-      });
-    }
-
-    return element;
-  };
-
   return (
-    <div className="relative">
-      <Slate
-        editor={editor}
-        initialValue={value}
-        onChange={(e) => {
-          // console.log(e);
+    <Slate
+      editor={editor}
+      initialValue={value}
+      onChange={(e) => {
+        // console.log(e);
+      }}
+    >
+      <Toolbar>
+        <MarkButton format="bold" icon="B" />
+        <MarkButton format="italic" icon="I" />
+        <MarkButton format="underline" icon="U" />
+        <BlockButton format="heading-one" icon="1" />
+        <BlockButton format="heading-two" icon="2" />
+        <BlockButton format="numbering" icon="n_list" />
+        <BlockButton format="bullets" icon="b_list" />
+        <BlockButton format="alphabet" icon="a_list" />
+        <BlockButton format="left" icon="left" />
+        <BlockButton format="center" icon="center" />
+        <BlockButton format="right" icon="right" />
+        <BlockButton format="justify" icon="justify" />
+        <AddLinkButton />
+        <RemoveLinkButton />
+        <Button
+          onMouseDown={(event: MouseEvent) => {
+            event.preventDefault();
+            downloadContent();
+          }}
+        >
+          <Icon>download</Icon>
+        </Button>
+      </Toolbar>
+      <Editable
+        renderElement={renderElement}
+        renderLeaf={renderLeaf}
+        placeholder="Enter some rich text…"
+        spellCheck
+        autoFocus
+        onKeyDown={(event) => {
+          // Handle hotkeys
+          for (const hotkey in HOTKEYS) {
+            if (isHotkey(hotkey, event as any)) {
+              event.preventDefault();
+              const mark = HOTKEYS[hotkey as keyof typeof HOTKEYS];
+              toggleMark(editor, mark);
+            }
+          }
+
+          // Handle Shift+Enter dalam list-item
+          if (event.shiftKey && event.key === 'Enter') {
+            event.preventDefault();
+            // Cek apakah kursor berada dalam list-item
+            const [match] = Array.from(
+              Editor.nodes(editor, {
+                match: (n) =>
+                  !Editor.isEditor(n) &&
+                  SlateElement.isElement(n) &&
+                  n.type === 'list-item',
+              })
+            );
+
+            if (match) {
+              // Sisipkan soft break (newline) dalam list-item
+              Transforms.insertText(editor, '\n');
+            } else {
+              // Jika bukan dalam list-item, lakukan default behavior
+              Transforms.insertText(editor, '\n');
+            }
+          }
         }}
-      >
-        <div className="flex items-center justify-between mb-2">
-          <Toolbar>
-            <MarkButton format="bold" icon="B" />
-            <MarkButton format="italic" icon="I" />
-            <MarkButton format="underline" icon="U" />
-            <BlockButton format="heading-one" icon="1" />
-            <BlockButton format="heading-two" icon="2" />
-            <BlockButton format="numbering" icon="n_list" />
-            <BlockButton format="bullets" icon="b_list" />
-            <BlockButton format="alphabet" icon="a_list" />
-            <BlockButton format="left" icon="left" />
-            <BlockButton format="center" icon="center" />
-            <BlockButton format="right" icon="right" />
-            <BlockButton format="justify" icon="justify" />
-            <AddLinkButton />
-            <RemoveLinkButton />
-            <button
-              className="bg-blue-500 text-white px-4 py-2 rounded-md"
-              onMouseDown={(event) => {
-                event.preventDefault();
-                downloadContent();
-              }}
-            >
-              Download Docx
-            </button>
-            <button
-              className="bg-blue-500 text-white px-4 py-2 rounded-md ml-2"
-              onMouseDown={(event) => {
-                event.preventDefault();
-                downloadPdf();
-              }}
-            >
-              Download PDF
-            </button>
-          </Toolbar>
-        </div>
-        <div className="slate-editor bg-white rounded-lg">
-          <Editable
-            renderElement={renderElement}
-            renderLeaf={renderLeaf}
-            placeholder="Enter some rich text…"
-            spellCheck
-            autoFocus
-            onKeyDown={(event) => {
-              // Handle hotkeys
-              for (const hotkey in HOTKEYS) {
-                if (isHotkey(hotkey, event as any)) {
-                  event.preventDefault();
-                  const mark = HOTKEYS[hotkey as keyof typeof HOTKEYS];
-                  toggleMark(editor, mark);
-                }
-              }
-
-              // Handle Shift+Enter dalam list-item
-              if (event.shiftKey && event.key === 'Enter') {
-                event.preventDefault();
-                // Cek apakah kursor berada dalam list-item
-                const [match] = Array.from(
-                  Editor.nodes(editor, {
-                    match: (n) =>
-                      !Editor.isEditor(n) &&
-                      SlateElement.isElement(n) &&
-                      n.type === 'list-item',
-                  })
-                );
-
-                if (match) {
-                  // Sisipkan soft break (newline) dalam list-item
-                  Transforms.insertText(editor, '\n');
-                } else {
-                  // Jika bukan dalam list-item, lakukan default behavior
-                  Transforms.insertText(editor, '\n');
-                }
-              }
-            }}
-          />
-        </div>
-      </Slate>
-    </div>
+      />
+    </Slate>
   );
 };
 

@@ -21,3 +21,58 @@
     text-wrap: balance;
   }
 }
+
+.slate-editor {
+  /* padding: 20px; */
+  line-height: 1.5;
+  min-height: 297mm;
+  box-sizing: border-box;
+}
+
+.page-break {
+  page-break-before: always;
+}
+
+/* Styling khusus untuk list dalam PDF */
+.slate-editor ol,
+.slate-editor ul {
+  padding-left: 2.5em; /* Berikan ruang untuk nomor/bullet */
+  margin: 0.5em 0;
+}
+
+.slate-editor ol {
+  list-style-type: decimal;
+  counter-reset: item;
+}
+
+.slate-editor ul {
+  list-style-type: disc;
+}
+
+.slate-editor ol li {
+  display: block;
+  position: relative;
+  margin-bottom: 0.3em;
+}
+
+.slate-editor ol li::before {
+  content: counter(item) '.';
+  counter-increment: item;
+  position: absolute;
+  left: -2.5em;
+  width: 2em;
+  text-align: right;
+}
+
+.slate-editor ul li {
+  margin-bottom: 0.3em;
+}
+
+/* Styling untuk nested lists */
+.slate-editor ol ol,
+.slate-editor ul ul,
+.slate-editor ol ul,
+.slate-editor ul ol {
+  margin-top: 0.3em;
+  margin-bottom: 0.3em;
+}

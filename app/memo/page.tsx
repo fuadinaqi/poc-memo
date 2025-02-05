@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Descendant } from 'slate';
 import MemoExample from './_Memo';
 
@@ -83,10 +83,42 @@ const init = [
   },
   {
     'type': 'paragraph',
-    'children': [
+    // 'children': [
+    //   {
+    //     'text':
+    //       'Memorandum ini membahas dua isu hukum penting di Indonesia: status terkini implementasi Undang-Undang Cipta Kerja dan legalitas perceraian tanpa melaporkan ke negara. UU Cipta Kerja telah disahkan dan beberapa peraturan pelaksana telah diterbitkan, namun masih menghadapi tantangan implementasi. Sementara itu, perceraian di Indonesia hanya sah jika dilakukan melalui prosedur pengadilan yang resmi, dengan konsekuensi hukum yang signifikan jika tidak dipatuhi.',
+    //   },
+    // ],
+    children: [
       {
         'text':
-          'Memorandum ini membahas dua isu hukum penting di Indonesia: status terkini implementasi Undang-Undang Cipta Kerja dan legalitas perceraian tanpa melaporkan ke negara. UU Cipta Kerja telah disahkan dan beberapa peraturan pelaksana telah diterbitkan, namun masih menghadapi tantangan implementasi. Sementara itu, perceraian di Indonesia hanya sah jika dilakukan melalui prosedur pengadilan yang resmi, dengan konsekuensi hukum yang signifikan jika tidak dipatuhi.',
+          'Memorandum ini membahas dua isu hukum penting di Indonesia: status terkini implementasi Undang-Undang ',
+      },
+      {
+        'text': 'Cipta Kerja dan ',
+        'bold': true,
+      },
+      {
+        'bold': true,
+        'text': 'legalitas',
+        'italic': true,
+      },
+      {
+        'text': ' percera',
+        'italic': true,
+      },
+      {
+        'italic': true,
+        'text': 'ian',
+        'underline': true,
+      },
+      {
+        'text': ' tanpa me',
+        'underline': true,
+      },
+      {
+        'text':
+          'laporkan ke negara. UU Cipta Kerja telah disahkan dan beberapa peraturan pelaksana telah diterbitkan, namun masih menghadapi tantangan implementasi. Sementara itu, perceraian di Indonesia hanya sah jika dilakukan melalui prosedur pengadilan yang resmi, dengan konsekuensi hukum yang signifikan jika tidak dipatuhi.',
       },
     ],
   },
@@ -517,6 +549,65 @@ export default function Page() {
   );
 
   const [value, setValue] = useState<Descendant[]>(init);
+
+  useEffect(() => {
+    const x = [
+      {
+        'text':
+          'Memorandum ini membahas dua isu hukum penting di Indonesia: status terkini implementasi Undang-Undang ',
+      },
+      {
+        'text': 'Cipta Kerja dan ',
+        'bold': true,
+      },
+      {
+        'bold': true,
+        'text': 'legalitas',
+        'italic': true,
+      },
+      {
+        'text': ' percera',
+        'italic': true,
+      },
+      {
+        'italic': true,
+        'text': 'ian',
+        'underline': true,
+      },
+      {
+        'text': ' tanpa me',
+        'underline': true,
+      },
+      {
+        'text':
+          'laporkan ke negara. UU Cipta Kerja telah disahkan dan beberapa peraturan pelaksana telah diterbitkan, namun masih menghadapi tantangan implementasi. Sementara itu, perceraian di Indonesia hanya sah jika dilakukan melalui prosedur pengadilan yang resmi, dengan konsekuensi hukum yang signifikan jika tidak dipatuhi.',
+      },
+    ];
+
+    const options: { bold: string[]; italic: string[]; underline: string[] } = {
+      bold: [],
+      italic: [],
+      underline: [],
+    };
+
+    x.forEach((item) => {
+      if (item.bold) {
+        options.bold.push(item.text);
+      }
+      if (item.italic) {
+        options.italic.push(item.text);
+      }
+      if (item.underline) {
+        options.underline.push(item.text);
+      }
+    });
+
+    // console.log(options);
+
+    const joinedText = x.map((item) => item.text).join('');
+
+    // console.log(joinedText);
+  }, []);
 
   return (
     <div className="mt-8 mx-auto w-[1096px] flex gap-2">

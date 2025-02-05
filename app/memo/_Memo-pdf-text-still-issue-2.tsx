@@ -29,7 +29,8 @@ import {
   ExternalHyperlink,
   IParagraphOptions,
 } from 'docx';
-import html2pdf from 'html2pdf.js';
+import jsPDF from 'jspdf';
+
 import { Button, Icon, Toolbar } from './components';
 import { CustomText } from '../_providers/SmartdocProvider';
 
@@ -510,47 +511,241 @@ const MemoExample = ({ value }: { value: Descendant[] }) => {
     });
   }, [editor]);
 
-  const downloadPdf = useCallback(async () => {
-    try {
-      const element = document.querySelector('.slate-editor');
-      if (!element) return;
+  const downloadPdf = useCallback(() => {
+    const doc = new jsPDF();
+    let yPos = 20;
+    const margin = 20;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const lineHeight = 5;
 
-      const opt = {
-        margin: [15, 15, 15, 25], // [top, right, bottom, left] - margin kiri lebih besar untuk list
-        filename: 'dokumen.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff',
-        },
-        jsPDF: {
-          unit: 'mm',
-          format: 'a4',
-          orientation: 'portrait',
-        },
-        pagebreak: { mode: 'avoid-all' },
-        // Tambahkan konfigurasi font untuk memastikan konsistensi
-        font: 'helvetica',
-        fontStyle: 'normal',
-      };
+    const addTextWithWrapping = (text: string, options: any = {}) => {
+      const fontSize = options.fontSize || 12;
+      doc.setFontSize(fontSize);
 
-      // Tambahkan class temporary untuk styling list
-      element.querySelectorAll('ol, ul').forEach((list) => {
-        list.classList.add('pdf-list');
+      if (options.bold) doc.setFont('helvetica', 'bold');
+      else if (options.italic) doc.setFont('helvetica', 'italic');
+      else doc.setFont('helvetica', 'normal');
+
+      const lines = doc.splitTextToSize(text, pageWidth - 2 * margin);
+
+      lines.forEach((line: string) => {
+        if (yPos > doc.internal.pageSize.getHeight() - margin) {
+          doc.addPage();
+          yPos = margin;
+        }
+
+        if (options.align === 'center') {
+          doc.text(line, pageWidth / 2, yPos, { align: 'center' });
+        } else if (options.align === 'right') {
+          doc.text(line, pageWidth - margin, yPos, { align: 'right' });
+        } else {
+          const xPos = options.isListItem ? margin + 10 : margin;
+
+          if (options.isLink) {
+            // Set link color to blue
+            doc.setTextColor(0, 0, 255);
+            // Add underline
+            const textWidth = doc.getTextWidth(line);
+            doc.text(line, xPos, yPos);
+            doc.setDrawColor(0, 0, 255);
+            doc.line(xPos, yPos + 1, xPos + textWidth, yPos + 1);
+            // Add link
+            doc.link(xPos, yPos - 5, textWidth, 10, { url: options.url });
+            // Reset color
+            doc.setTextColor(0, 0, 0);
+            doc.setDrawColor(0, 0, 0);
+          } else {
+            doc.text(line, xPos, yPos);
+          }
+        }
+
+        yPos += lineHeight;
       });
 
-      await html2pdf().set(opt).from(element).save();
+      yPos += 1;
+    };
 
-      // Bersihkan class temporary
-      element.querySelectorAll('.pdf-list').forEach((list) => {
-        list.classList.remove('pdf-list');
+    const addTextWithWrapping2 = (text: string, options: any = {}) => {
+      const fontSize = options.fontSize || 12;
+      doc.setFontSize(fontSize);
+
+      // if (options.bold) doc.setFont('helvetica', 'bold');
+      // else if (options.italic) doc.setFont('helvetica', 'italic');
+      // else doc.setFont('helvetica', 'normal');
+      doc.setFont('helvetica', 'bolditalic');
+
+      const lines = doc.splitTextToSize(text, pageWidth - 2 * margin);
+
+      lines.forEach((line: string) => {
+        if (yPos > doc.internal.pageSize.getHeight() - margin) {
+          doc.addPage();
+          yPos = margin;
+        }
+
+        if (options.align === 'center') {
+          doc.text(line, pageWidth / 2, yPos, { align: 'center' });
+        } else if (options.align === 'right') {
+          doc.text(line, pageWidth - margin, yPos, { align: 'right' });
+        } else {
+          const xPos = options.isListItem ? margin + 10 : margin;
+
+          if (options.isLink) {
+            // Set link color to blue
+            doc.setTextColor(0, 0, 255);
+            // Add underline
+            const textWidth = doc.getTextWidth(line);
+            doc.text(line, xPos, yPos);
+            doc.setDrawColor(0, 0, 255);
+            doc.line(xPos, yPos + 1, xPos + textWidth, yPos + 1);
+            // Add link
+            doc.link(xPos, yPos - 5, textWidth, 10, { url: options.url });
+            // Reset color
+            doc.setTextColor(0, 0, 0);
+            doc.setDrawColor(0, 0, 0);
+          } else {
+            doc.text(line, xPos, yPos);
+          }
+        }
+
+        yPos += lineHeight;
       });
-    } catch (error) {
-      console.error('Gagal mengunduh PDF:', error);
-    }
-  }, []);
+
+      yPos += 1;
+    };
+
+    const processNode = (node: any) => {
+      if (node.text !== undefined) {
+        return {
+          text: node.text,
+          bold: node.bold,
+          italic: node.italic,
+          underline: node.underline,
+        };
+      }
+
+      if (node.children) {
+        let listCounter = 1;
+        if (LIST_TYPES.includes(node.type)) {
+          node.children.forEach((child: any) => {
+            if (child.type === 'list-item') {
+              let prefix = '';
+              switch (node.type) {
+                case 'bullets':
+                  prefix = '• ';
+                  break;
+                case 'numbering':
+                  prefix = `${listCounter++}. `;
+                  break;
+                case 'alphabet':
+                  prefix = `${String.fromCharCode(96 + listCounter++)}. `;
+                  break;
+              }
+
+              const itemText = child.children
+                .map((grandChild: any) => {
+                  if (grandChild.text !== undefined) {
+                    return grandChild.text;
+                  }
+                  return '';
+                })
+                .join('');
+
+              addTextWithWrapping(prefix + itemText, {
+                align: child.align,
+                bold: child.bold,
+                italic: child.italic,
+                isListItem: true,
+              });
+            }
+          });
+        } else if (node.type === 'link') {
+          // Handle link nodes
+          const linkText = node.children
+            .map((child: any) => child.text || '')
+            .join('');
+          addTextWithWrapping(linkText, {
+            isLink: true,
+            url: node.url,
+            align: node.align,
+            bold: node.bold,
+            italic: node.italic,
+          });
+        } else {
+          const options: {
+            bold: string[];
+            italic: string[];
+            underline: string[];
+          } = {
+            bold: [],
+            italic: [],
+            underline: [],
+          };
+
+          node.children.forEach((child: any) => {
+            if (child.bold) {
+              options.bold.push(child.text);
+            }
+            if (child.italic) {
+              options.italic.push(child.text);
+            }
+            if (child.underline) {
+              options.underline.push(child.text);
+            }
+          });
+
+          const joinedText = node.children
+            .map((child: any) => child.text)
+            .join('');
+
+          console.log(joinedText);
+          console.log(options);
+
+          addTextWithWrapping2(joinedText, options);
+
+          // console.log({ node });
+          // node.children.forEach((child: any) => {
+          //   if (child.type === 'link') {
+          //     // Handle nested links
+          //     const linkText = child.children
+          //       .map((grandChild: any) => grandChild.text || '')
+          //       .join('');
+          //     addTextWithWrapping(linkText, {
+          //       isLink: true,
+          //       url: child.url,
+          //       align: node.align,
+          //       bold: child.bold,
+          //       italic: child.italic,
+          //     });
+          //   } else if (node.type === 'heading-one') {
+          //     addTextWithWrapping(child.text || '', {
+          //       fontSize: 16,
+          //       bold: true,
+          //     });
+          //   } else if (node.type === 'heading-two') {
+          //     addTextWithWrapping(child.text || '', {
+          //       fontSize: 14,
+          //       bold: true,
+          //     });
+          //   } else {
+          //     const text = child.text || '';
+          //     addTextWithWrapping(text, {
+          //       align: node.align,
+          //       bold: child.bold,
+          //       italic: child.italic,
+          //     });
+          //   }
+          // });
+        }
+      }
+    };
+
+    // Process all nodes
+    editor.children.forEach((node: any) => {
+      processNode(node);
+    });
+
+    doc.save('dokumen.pdf');
+  }, [editor]);
 
   // Fungsi helper untuk mengkonversi node ke HTML
   const serializeToHtml = (node: any): HTMLElement => {
@@ -608,93 +803,87 @@ const MemoExample = ({ value }: { value: Descendant[] }) => {
   };
 
   return (
-    <div className="relative">
-      <Slate
-        editor={editor}
-        initialValue={value}
-        onChange={(e) => {
-          // console.log(e);
+    <Slate
+      editor={editor}
+      initialValue={value}
+      onChange={(e) => {
+        // console.log(e);
+      }}
+    >
+      <Toolbar>
+        <MarkButton format="bold" icon="B" />
+        <MarkButton format="italic" icon="I" />
+        <MarkButton format="underline" icon="U" />
+        <BlockButton format="heading-one" icon="1" />
+        <BlockButton format="heading-two" icon="2" />
+        <BlockButton format="numbering" icon="n_list" />
+        <BlockButton format="bullets" icon="b_list" />
+        <BlockButton format="alphabet" icon="a_list" />
+        <BlockButton format="left" icon="left" />
+        <BlockButton format="center" icon="center" />
+        <BlockButton format="right" icon="right" />
+        <BlockButton format="justify" icon="justify" />
+        <AddLinkButton />
+        <RemoveLinkButton />
+        <button
+          className="bg-blue-500 text-white px-4 py-2 rounded-md"
+          onMouseDown={(event) => {
+            event.preventDefault();
+            downloadContent();
+          }}
+        >
+          Download Docx
+        </button>
+        <button
+          className="bg-blue-500 text-white px-4 py-2 rounded-md ml-2"
+          onMouseDown={(event) => {
+            event.preventDefault();
+            downloadPdf();
+          }}
+        >
+          Download PDF
+        </button>
+      </Toolbar>
+      <Editable
+        renderElement={renderElement}
+        renderLeaf={renderLeaf}
+        placeholder="Enter some rich text…"
+        spellCheck
+        autoFocus
+        onKeyDown={(event) => {
+          // Handle hotkeys
+          for (const hotkey in HOTKEYS) {
+            if (isHotkey(hotkey, event as any)) {
+              event.preventDefault();
+              const mark = HOTKEYS[hotkey as keyof typeof HOTKEYS];
+              toggleMark(editor, mark);
+            }
+          }
+
+          // Handle Shift+Enter dalam list-item
+          if (event.shiftKey && event.key === 'Enter') {
+            event.preventDefault();
+            // Cek apakah kursor berada dalam list-item
+            const [match] = Array.from(
+              Editor.nodes(editor, {
+                match: (n) =>
+                  !Editor.isEditor(n) &&
+                  SlateElement.isElement(n) &&
+                  n.type === 'list-item',
+              })
+            );
+
+            if (match) {
+              // Sisipkan soft break (newline) dalam list-item
+              Transforms.insertText(editor, '\n');
+            } else {
+              // Jika bukan dalam list-item, lakukan default behavior
+              Transforms.insertText(editor, '\n');
+            }
+          }
         }}
-      >
-        <div className="flex items-center justify-between mb-2">
-          <Toolbar>
-            <MarkButton format="bold" icon="B" />
-            <MarkButton format="italic" icon="I" />
-            <MarkButton format="underline" icon="U" />
-            <BlockButton format="heading-one" icon="1" />
-            <BlockButton format="heading-two" icon="2" />
-            <BlockButton format="numbering" icon="n_list" />
-            <BlockButton format="bullets" icon="b_list" />
-            <BlockButton format="alphabet" icon="a_list" />
-            <BlockButton format="left" icon="left" />
-            <BlockButton format="center" icon="center" />
-            <BlockButton format="right" icon="right" />
-            <BlockButton format="justify" icon="justify" />
-            <AddLinkButton />
-            <RemoveLinkButton />
-            <button
-              className="bg-blue-500 text-white px-4 py-2 rounded-md"
-              onMouseDown={(event) => {
-                event.preventDefault();
-                downloadContent();
-              }}
-            >
-              Download Docx
-            </button>
-            <button
-              className="bg-blue-500 text-white px-4 py-2 rounded-md ml-2"
-              onMouseDown={(event) => {
-                event.preventDefault();
-                downloadPdf();
-              }}
-            >
-              Download PDF
-            </button>
-          </Toolbar>
-        </div>
-        <div className="slate-editor bg-white rounded-lg">
-          <Editable
-            renderElement={renderElement}
-            renderLeaf={renderLeaf}
-            placeholder="Enter some rich text…"
-            spellCheck
-            autoFocus
-            onKeyDown={(event) => {
-              // Handle hotkeys
-              for (const hotkey in HOTKEYS) {
-                if (isHotkey(hotkey, event as any)) {
-                  event.preventDefault();
-                  const mark = HOTKEYS[hotkey as keyof typeof HOTKEYS];
-                  toggleMark(editor, mark);
-                }
-              }
-
-              // Handle Shift+Enter dalam list-item
-              if (event.shiftKey && event.key === 'Enter') {
-                event.preventDefault();
-                // Cek apakah kursor berada dalam list-item
-                const [match] = Array.from(
-                  Editor.nodes(editor, {
-                    match: (n) =>
-                      !Editor.isEditor(n) &&
-                      SlateElement.isElement(n) &&
-                      n.type === 'list-item',
-                  })
-                );
-
-                if (match) {
-                  // Sisipkan soft break (newline) dalam list-item
-                  Transforms.insertText(editor, '\n');
-                } else {
-                  // Jika bukan dalam list-item, lakukan default behavior
-                  Transforms.insertText(editor, '\n');
-                }
-              }
-            }}
-          />
-        </div>
-      </Slate>
-    </div>
+      />
+    </Slate>
   );
 };
 
